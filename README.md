@@ -173,14 +173,15 @@ etiquetas (p. ej. una en inglés y otra en español).
 
 La arquitectura no depende de la disciplina: la verifican herramientas en cada commit y en CI.
 
-| Qué se verifica                                               | Herramienta                                      | Comando                 |
-| ------------------------------------------------------------- | ------------------------------------------------ | ----------------------- |
-| Regla de dependencia entre capas, sin ciclos                  | `dependency-cruiser` (`.dependency-cruiser.cjs`) | `npm run lint:arch`     |
-| `domain` y `application` no usan DOM ni globals del navegador | `tsconfig.core.json` (sin lib `DOM`)             | `npm run typecheck`     |
-| Nomenclatura, imports de tipos, buenas prácticas de Lit/WC    | ESLint (`eslint.config.js`)                      | `npm run lint`          |
-| Formato                                                       | Prettier                                         | `npm run format:check`  |
-| Formato de mensajes de commit                                 | `scripts/validate-commit-msg.mjs` (hook)         | automático              |
-| Exports y tipos del paquete correctos                         | `@arethetypeswrong/cli`                          | `npm run check:exports` |
+| Qué se verifica                                               | Herramienta                                      | Comando                      |
+| ------------------------------------------------------------- | ------------------------------------------------ | ---------------------------- |
+| Regla de dependencia entre capas, sin ciclos                  | `dependency-cruiser` (`.dependency-cruiser.cjs`) | `npm run lint:arch`          |
+| `domain` y `application` no usan DOM ni globals del navegador | `tsconfig.core.json` (sin lib `DOM`)             | `npm run typecheck`          |
+| Nomenclatura, imports de tipos, buenas prácticas de Lit/WC    | ESLint (`eslint.config.js`)                      | `npm run lint`               |
+| Formato                                                       | Prettier                                         | `npm run format:check`       |
+| Formato de mensajes de commit                                 | `scripts/validate-commit-msg.mjs` (hook)         | automático                   |
+| Exports y tipos del paquete correctos                         | `@arethetypeswrong/cli`                          | `npm run check:exports`      |
+| Los `*/define` registran componentes también con bundlers     | `scripts/check-side-effects.mjs` (esbuild)       | `npm run check:side-effects` |
 
 Hooks de git (instalados automáticamente con `npm install` vía `simple-git-hooks`):
 
@@ -305,19 +306,20 @@ de npm para publicar, que **nunca** se guarda en el repositorio (ver
 
 ## Scripts disponibles
 
-| Script                  | Qué hace                                                    |
-| ----------------------- | ----------------------------------------------------------- |
-| `npm run dev`           | Build en modo watch                                         |
-| `npm run build`         | Genera `dist/` (ESM + `.d.ts`) y `custom-elements.json`     |
-| `npm test`              | Corre los tests una vez                                     |
-| `npm run test:watch`    | Tests en modo watch                                         |
-| `npm run typecheck`     | Chequeo de tipos general + pureza del núcleo                |
-| `npm run lint`          | ESLint + reglas de arquitectura                             |
-| `npm run lint:arch`     | Solo reglas de arquitectura (dependency-cruiser)            |
-| `npm run lint:fix`      | ESLint con autofix                                          |
-| `npm run format`        | Formatea todo con Prettier                                  |
-| `npm run check:exports` | Verifica que los exports y tipos del paquete resuelvan bien |
-| `npm run validate`      | Todo lo anterior, en el mismo orden que CI                  |
+| Script                       | Qué hace                                                                     |
+| ---------------------------- | ---------------------------------------------------------------------------- |
+| `npm run dev`                | Build en modo watch                                                          |
+| `npm run build`              | Genera `dist/` (ESM + `.d.ts`) y `custom-elements.json`                      |
+| `npm test`                   | Corre los tests una vez                                                      |
+| `npm run test:watch`         | Tests en modo watch                                                          |
+| `npm run typecheck`          | Chequeo de tipos general + pureza del núcleo                                 |
+| `npm run lint`               | ESLint + reglas de arquitectura                                              |
+| `npm run lint:arch`          | Solo reglas de arquitectura (dependency-cruiser)                             |
+| `npm run lint:fix`           | ESLint con autofix                                                           |
+| `npm run format`             | Formatea todo con Prettier                                                   |
+| `npm run check:exports`      | Verifica que los exports y tipos del paquete resuelvan bien                  |
+| `npm run check:side-effects` | Bundlea cada `*/define` como una app y verifica que registre sus componentes |
+| `npm run validate`           | Todo lo anterior, en el mismo orden que CI                                   |
 
 ---
 
@@ -595,7 +597,7 @@ defineApprovalCard();
 ### 6. Exponer en la API pública
 
 - Re-exportar en `src/index.ts` (`defineApprovalCard`, `APPROVAL_CARD_TAG`, `DzApprovalCard`, tipos).
-- Importar `./composition/approval-card/define.js` en `src/define.ts`.
+- Llamar `defineApprovalCard()` en `src/define.ts` (una llamada explícita, **nunca** `import "./composition/approval-card/define.js"`: los bundlers descartarían ese import y el componente no se registraría).
 - Agregar en `package.json → exports`:
   `"./approval-card/define": { "types": "./dist/composition/approval-card/define.d.ts", "default": "./dist/composition/approval-card/define.js" }`.
 - Agregar el componente a la tabla de [componentes disponibles](#componentes-disponibles).
