@@ -72,7 +72,7 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "check:exports": "attw --pack . --profile esm-only",
+    "check:exports": "node scripts/check-exports.mjs",
     "validate": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run build && npm run check:exports",
     "prepublishOnly": "npm run validate",
     "prepare": "simple-git-hooks"
