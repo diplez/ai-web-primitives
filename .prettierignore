@@ -1,0 +1,4 @@
+dist/
+coverage/
+custom-elements.json
+package-lock.json

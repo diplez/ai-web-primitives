@@ -1,0 +1,106 @@
+{
+  "name": "@diplez/ai-web-primitives",
+  "version": "0.0.1",
+  "description": "Web Components agnósticos de framework para interfaces de IA: razonamiento, UI generativa, human-in-the-loop y voz. Funcionan en React, Vue, Angular, Svelte o HTML plano.",
+  "keywords": [
+    "web-components",
+    "custom-elements",
+    "lit",
+    "ai",
+    "llm",
+    "generative-ui",
+    "streaming",
+    "human-in-the-loop",
+    "react",
+    "vue",
+    "angular",
+    "svelte"
+  ],
+  "author": "diplez",
+  "license": "MIT",
+  "homepage": "https://github.com/diplez/ai-web-primitives#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/diplez/ai-web-primitives.git"
+  },
+  "bugs": {
+    "url": "https://github.com/diplez/ai-web-primitives/issues"
+  },
+  "type": "module",
+  "sideEffects": [
+    "./dist/define.js",
+    "./dist/composition/*/define.js"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./define": {
+      "types": "./dist/define.d.ts",
+      "default": "./dist/define.js"
+    },
+    "./thinking-indicator/define": {
+      "types": "./dist/composition/thinking-indicator/define.d.ts",
+      "default": "./dist/composition/thinking-indicator/define.js"
+    },
+    "./custom-elements.json": "./custom-elements.json",
+    "./package.json": "./package.json"
+  },
+  "customElements": "custom-elements.json",
+  "files": [
+    "dist",
+    "custom-elements.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "dev": "tsup --watch",
+    "build": "tsup && npm run analyze",
+    "analyze": "cem analyze",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.core.json",
+    "lint": "eslint . && npm run lint:arch",
+    "lint:arch": "depcruise src",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check:exports": "attw --pack . --profile esm-only",
+    "validate": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run build && npm run check:exports",
+    "prepublishOnly": "npm run validate",
+    "prepare": "simple-git-hooks"
+  },
+  "simple-git-hooks": {
+    "commit-msg": "node scripts/validate-commit-msg.mjs $1",
+    "pre-commit": "npm run lint && npm run typecheck"
+  },
+  "dependencies": {
+    "lit": "^3.3.3"
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.5",
+    "@custom-elements-manifest/analyzer": "^0.11.0",
+    "@eslint/js": "^10.0.1",
+    "@testing-library/jest-dom": "^7.0.1",
+    "dependency-cruiser": "^18.7.2",
+    "eslint": "^10.14.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-lit": "^2.3.1",
+    "eslint-plugin-wc": "^3.1.0",
+    "globals": "^17.14.0",
+    "jsdom": "^29.1.1",
+    "prettier": "^3.10.1",
+    "simple-git-hooks": "^2.14.0",
+    "tsup": "^9.0.0",
+    "typescript": "~5.9",
+    "typescript-eslint": "^8.72.2",
+    "vitest": "^5.1.0"
+  }
+}
