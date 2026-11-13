@@ -43,17 +43,53 @@ npm install @diplez/ai-web-primitives
 import "@diplez/ai-web-primitives/define";
 
 // Opción 2 — registra solo uno (mejor tree-shaking)
-import "@diplez/ai-web-primitives/thinking-indicator/define";
+import "@diplez/ai-web-primitives/thinking-orb/define";
 
 // Opción 3 — registro configurable (etiqueta, idioma, registro de custom elements)
-import { defineThinkingIndicator, SPANISH_THINKING_LABELS } from "@diplez/ai-web-primitives";
-defineThinkingIndicator({ labels: SPANISH_THINKING_LABELS });
+import { defineThinkingOrb, SPANISH_THINKING_LABELS } from "@diplez/ai-web-primitives";
+defineThinkingOrb({ labels: SPANISH_THINKING_LABELS });
 ```
 
 ```html
+<dz-thinking-orb phase="generating"></dz-thinking-orb>
+<dz-thinking-orb phase="searching" show-label style="--dz-orb-size: 64px"></dz-thinking-orb>
+
 <dz-thinking-indicator phase="searching"></dz-thinking-indicator>
 <dz-thinking-indicator phase="generating" label="Redactando…"></dz-thinking-indicator>
-<dz-thinking-indicator phase="analyzing">Contenido propio en el slot</dz-thinking-indicator>
+```
+
+### `<dz-thinking-orb>`: orbes de pensamiento
+
+Un orbe animado que comunica en qué está el modelo **con movimiento, no solo con color**. Cada
+fase tiene una metáfora propia y el orbe se transforma de una a otra de forma continua, emitiendo
+una onda en cada cambio:
+
+| Fase         | Metáfora    | Qué se ve                                                                       |
+| ------------ | ----------- | ------------------------------------------------------------------------------- |
+| `idle`       | Respiración | Esfera gris azulada casi inmóvil que respira lento                              |
+| `analyzing`  | Escáner     | Anillos inclinados que giran y barren el orbe, pasando por delante y por detrás |
+| `searching`  | Sonar       | Pulsos que se expanden y partículas que salen en rayos y vuelven                |
+| `generating` | Forja       | Superficie turbulenta, núcleo que gira rápido y tokens emitidos en espiral      |
+| `done`       | Calma       | Se asienta en verde                                                             |
+
+```js
+const orb = document.querySelector("dz-thinking-orb");
+orb.phase = "analyzing"; // al cambiar la propiedad o el atributo, el orbe transiciona solo
+```
+
+- **Accesibilidad**: el canvas está oculto a lectores de pantalla; el estado se anuncia con un
+  `role="status"` (visible con `show-label`). Con `prefers-reduced-motion` muestra una pose
+  estática por fase, sin animación.
+- **Rendimiento**: se pausa cuando sale de la pantalla y cuando la pestaña está oculta;
+  ajusta la resolución al `devicePixelRatio`.
+- **Colores propios**: por fase, con CSS custom properties numéricas (se interpolan en las transiciones):
+
+```css
+dz-thinking-orb[phase="generating"] {
+  --dz-orb-hue: 340; /* matiz principal, 0–360 */
+  --dz-orb-accent-hue: 20; /* matiz de núcleo, anillos y partículas */
+  --dz-orb-saturation: 90; /* 0–100 */
+}
 ```
 
 > El import raíz (`@diplez/ai-web-primitives`) **no registra nada**: solo exporta clases,
@@ -85,9 +121,10 @@ herramientas de documentación.
 
 ### Componentes disponibles
 
-| Etiqueta                  | Atributos                                                                     | Parts       | CSS props             |
-| ------------------------- | ----------------------------------------------------------------------------- | ----------- | --------------------- |
-| `<dz-thinking-indicator>` | `phase` (`idle` · `analyzing` · `searching` · `generating` · `done`), `label` | `indicator` | `--dz-thinking-color` |
+| Etiqueta                  | Atributos                                                                                   | Parts          | CSS props                                                                                             |
+| ------------------------- | ------------------------------------------------------------------------------------------- | -------------- | ----------------------------------------------------------------------------------------------------- |
+| `<dz-thinking-orb>`       | `phase` (`idle` · `analyzing` · `searching` · `generating` · `done`), `label`, `show-label` | `orb`, `label` | `--dz-orb-size`, `--dz-orb-hue`, `--dz-orb-accent-hue`, `--dz-orb-saturation`, `--dz-orb-label-color` |
+| `<dz-thinking-indicator>` | `phase` (`idle` · `analyzing` · `searching` · `generating` · `done`), `label`               | `indicator`    | `--dz-thinking-color`                                                                                 |
 
 ---
 
@@ -199,38 +236,54 @@ ai-web-primitives/
 │   ├── define.ts                                  # Registra todos los componentes
 │   │
 │   ├── domain/                                    # Núcleo puro — sin DOM, sin paquetes npm
-│   │   └── thinking/
-│   │       ├── thinking-phase.ts                  # Value object + reglas (isBusyPhase)
-│   │       ├── thinking-phase.test.ts
-│   │       └── thinking-status.ts                 # Estado inmutable
+│   │   ├── thinking/
+│   │   │   ├── thinking-phase.ts                  # Value object + reglas (isBusyPhase)
+│   │   │   └── thinking-status.ts                 # Estado inmutable
+│   │   └── orb/
+│   │       ├── orb-profile.ts                     # Personalidad visual de cada fase + mezcla
+│   │       ├── orb-transition.ts                  # Transiciones suaves y onda de cambio
+│   │       └── orb-geometry.ts                    # Contorno, partículas, anillos, sonar (puro)
 │   │
 │   ├── application/                               # Casos de uso — solo depende de domain
 │   │   ├── dtos/
-│   │   │   └── thinking-status-dto.ts             # Salida hacia presentación
+│   │   │   ├── thinking-status-dto.ts
+│   │   │   └── orb-frame-dto.ts                   # Un frame listo para dibujar
 │   │   ├── ports/
-│   │   │   └── thinking-label-provider.ts         # Puerto de salida (i18n)
+│   │   │   ├── thinking-label-provider.ts         # i18n
+│   │   │   ├── frame-scheduler.ts                 # Reloj de animación
+│   │   │   └── motion-preference.ts               # prefers-reduced-motion
 │   │   └── use-cases/
-│   │       └── thinking/
-│   │           ├── get-thinking-status.ts
-│   │           └── get-thinking-status.test.ts
+│   │       ├── thinking/get-thinking-status.ts
+│   │       └── orb/
+│   │           ├── animate-thinking-orb.ts        # Orquesta bucle, fases, pausa, accesibilidad
+│   │           └── compose-orb-frame.ts
 │   │
 │   ├── infrastructure/                            # Adaptadores de los puertos
-│   │   └── i18n/
-│   │       ├── static-thinking-label-provider.ts  # Etiquetas en/es
-│   │       └── static-thinking-label-provider.test.ts
+│   │   ├── i18n/static-thinking-label-provider.ts # Etiquetas en/es
+│   │   └── browser/
+│   │       ├── animation-frame-scheduler.ts       # requestAnimationFrame
+│   │       └── media-query-motion-preference.ts   # matchMedia
 │   │
 │   ├── presentation/                              # Web Components (Lit)
 │   │   └── components/
-│   │       └── thinking-indicator/
-│   │           ├── dz-thinking-indicator.ts       # El custom element
-│   │           ├── dz-thinking-indicator.styles.ts
-│   │           └── dz-thinking-indicator.test.ts  # Con caso de uso falso
+│   │       ├── thinking-indicator/
+│   │       │   ├── dz-thinking-indicator.ts       # El custom element
+│   │       │   └── dz-thinking-indicator.styles.ts
+│   │       └── thinking-orb/
+│   │           ├── dz-thinking-orb.ts             # El custom element
+│   │           ├── dz-thinking-orb.styles.ts
+│   │           ├── orb-canvas-renderer.ts         # Solo pinta el DTO en canvas 2D
+│   │           └── read-orb-palette.ts            # Lee --dz-orb-* del CSS
 │   │
 │   └── composition/                               # Composition root por componente
-│       └── thinking-indicator/
-│           ├── define-thinking-indicator.ts       # Arma dependencias + registra
-│           ├── define-thinking-indicator.test.ts  # Test de integración (4 capas reales)
-│           └── define.ts                          # Entry con efecto: registra por defecto
+│       ├── thinking-indicator/
+│       │   ├── define-thinking-indicator.ts       # Arma dependencias + registra
+│       │   └── define.ts                          # Entry con efecto: registra por defecto
+│       └── thinking-orb/
+│           ├── define-thinking-orb.ts
+│           └── define.ts
+│
+│   (cada archivo tiene su *.test.ts al lado)
 │
 ├── scripts/
 │   └── validate-commit-msg.mjs                    # Hook commit-msg
@@ -329,16 +382,16 @@ Este paquete sigue **[SemVer](https://semver.org/lang/es/)**. En una librería d
 la API pública es más que los exports de JavaScript. **Cambiar cualquiera de estos elementos es
 un _breaking change_** (versión mayor; menor mientras estemos en `0.x`):
 
-| Elemento de API pública        | Ejemplo                                   |
-| ------------------------------ | ----------------------------------------- |
-| Nombres de etiqueta            | `dz-thinking-indicator`                   |
-| Atributos y propiedades        | `phase`, `label`                          |
-| Valores aceptados de atributos | `idle`, `analyzing`, …                    |
-| Eventos y su `detail`          | `dz-approve` (futuro)                     |
-| Slots                          | slot por defecto                          |
-| CSS parts                      | `indicator`                               |
-| CSS custom properties          | `--dz-thinking-color`                     |
-| Exports y subpaths del paquete | `./define`, `./thinking-indicator/define` |
+| Elemento de API pública        | Ejemplo                                                            |
+| ------------------------------ | ------------------------------------------------------------------ |
+| Nombres de etiqueta            | `dz-thinking-indicator`                                            |
+| Atributos y propiedades        | `phase`, `label`                                                   |
+| Valores aceptados de atributos | `idle`, `analyzing`, …                                             |
+| Eventos y su `detail`          | `dz-approve` (futuro)                                              |
+| Slots                          | slot por defecto                                                   |
+| CSS parts                      | `indicator`                                                        |
+| CSS custom properties          | `--dz-thinking-color`                                              |
+| Exports y subpaths del paquete | `./define`, `./thinking-orb/define`, `./thinking-indicator/define` |
 
 Lo que **no** es API pública: la estructura interna del Shadow DOM fuera de los `part`, los
 archivos dentro de `dist/` que no estén en `exports`, y todo lo que no se re-exporte desde
