@@ -5,6 +5,8 @@ React, Vue, Angular, Svelte o HTML plano. Muestran lo que hace el modelo (piensa
 permiso, responde y cita) con una sola línea de código y se adaptan a tu marca cambiando una
 variable de color.
 
+<p align="center"><img src="https://raw.githubusercontent.com/diplez/ai-web-primitives/main/docs/media/orbs.gif" alt="Los 12 diseños de dz-thinking-orb pasando por las fases analyzing, searching, generating y done" width="600"></p>
+
 > Estado: desarrollo temprano (`0.x`). La API pública puede cambiar entre versiones menores hasta
 > la `1.0.0`. Roadmap: [`docs/ideas-libreria-componentes-ia.md`](docs/ideas-libreria-componentes-ia.md).
 
@@ -83,6 +85,8 @@ defineMarkdown({ tagName: "mi-markdown", locale: "es", messages: { copy: "Copiar
 
 ### `<dz-markdown>`: respuestas en streaming
 
+<p align="center"><img src="https://raw.githubusercontent.com/diplez/ai-web-primitives/main/docs/media/markdown.gif" alt="dz-markdown mostrando una respuesta en streaming con código y tabla" width="640"></p>
+
 ```html
 <dz-markdown> # Puedes escribir el markdown **dentro** de la etiqueta </dz-markdown>
 ```
@@ -120,6 +124,8 @@ Eventos: `dz-stream-start`, `dz-stream-end` (`{ text, aborted }`), `dz-stream-er
 
 ### `<dz-reasoning>`: pasos del agente
 
+<p align="center"><img src="https://raw.githubusercontent.com/diplez/ai-web-primitives/main/docs/media/reasoning.gif" alt="dz-reasoning agregando pasos en vivo y cerrándose con el tiempo total" width="600"></p>
+
 ```html
 <dz-reasoning steps='["Leer el repositorio", "Buscar usos de la API"]'></dz-reasoning>
 ```
@@ -144,6 +150,8 @@ Estados de un paso: `pending`, `running`, `done`, `error`. Atributos: `steps` (J
 primer paso en curso.
 
 ### `<dz-approval>`: permiso antes de actuar
+
+<p align="center"><img src="https://raw.githubusercontent.com/diplez/ai-web-primitives/main/docs/media/approval.gif" alt="dz-approval con cuenta regresiva y aprobación del usuario" width="600"></p>
 
 ```html
 <dz-approval heading="Borrar 3 archivos" tone="danger" timeout="15">
@@ -173,6 +181,8 @@ La cuenta regresiva **se pausa** mientras la persona pasa el mouse o tiene el fo
 
 ### `<dz-citation>`: fuentes (RAG)
 
+<p align="center"><img src="https://raw.githubusercontent.com/diplez/ai-web-primitives/main/docs/media/citation.gif" alt="dz-citation mostrando la fuente al pasar el mouse" width="620"></p>
+
 ```html
 <p>
   La API admite paginación por cursor
@@ -192,6 +202,8 @@ el nivel de coincidencia (`0.92`, `92` o `"92%"`). La tarjeta usa la Popover API
 la recortan los contenedores con `overflow`. Evento: `dz-citation-open`.
 
 ### `<dz-thinking-orb>`: orbes de pensamiento
+
+<p align="center"><img src="https://raw.githubusercontent.com/diplez/ai-web-primitives/main/docs/media/orbs.gif" alt="Los 12 diseños de dz-thinking-orb" width="600"></p>
 
 Un orbe animado que comunica en qué está el modelo **con movimiento, no solo con color**. Cada
 fase tiene una metáfora propia y el orbe se transforma de una a otra de forma continua:
