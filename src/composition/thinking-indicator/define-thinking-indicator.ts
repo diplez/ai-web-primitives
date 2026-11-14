@@ -8,6 +8,8 @@ import {
   type ThinkingIndicatorDependencies,
 } from "../../presentation/components/thinking-indicator/dz-thinking-indicator.js";
 
+import { resolveThinkingLabels, type Locale } from "../shared/locale.js";
+
 export const THINKING_INDICATOR_TAG = "dz-thinking-indicator";
 
 export interface DefineThinkingIndicatorOptions {
@@ -15,6 +17,8 @@ export interface DefineThinkingIndicatorOptions {
   readonly tagName?: string;
   /** Diccionario de etiquetas por fase. Por defecto, inglés. */
   readonly labels?: ThinkingLabels;
+  /** Idioma de los textos por defecto (`en` o `es`). `labels` tiene prioridad. */
+  readonly locale?: Locale;
   /** Registro de custom elements. Por defecto, el global `customElements`. */
   readonly registry?: CustomElementRegistry;
 }
@@ -36,7 +40,9 @@ export function defineThinkingIndicator(
   }
 
   const dependencies: ThinkingIndicatorDependencies = {
-    getThinkingStatus: new GetThinkingStatus(new StaticThinkingLabelProvider(options.labels)),
+    getThinkingStatus: new GetThinkingStatus(
+      new StaticThinkingLabelProvider(resolveThinkingLabels(options.locale, options.labels)),
+    ),
   };
 
   class RegisteredThinkingIndicator extends DzThinkingIndicator {

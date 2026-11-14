@@ -11,6 +11,8 @@ import {
   type ThinkingOrbDependencies,
 } from "../../presentation/components/thinking-orb/dz-thinking-orb.js";
 
+import { resolveThinkingLabels, type Locale } from "../shared/locale.js";
+
 export const THINKING_ORB_TAG = "dz-thinking-orb";
 
 export interface DefineThinkingOrbOptions {
@@ -18,6 +20,8 @@ export interface DefineThinkingOrbOptions {
   readonly tagName?: string;
   /** Diccionario de textos de estado por fase (para lectores de pantalla y `show-label`). Por defecto, inglés. */
   readonly labels?: ThinkingLabels;
+  /** Idioma de los textos por defecto (`en` o `es`). `labels` tiene prioridad. */
+  readonly locale?: Locale;
   /** Registro de custom elements. Por defecto, el global `customElements`. */
   readonly registry?: CustomElementRegistry;
 }
@@ -40,7 +44,9 @@ export function defineThinkingOrb(options: DefineThinkingOrbOptions = {}): typeo
       new AnimationFrameScheduler(),
       new MediaQueryMotionPreference(),
     ),
-    getThinkingStatus: new GetThinkingStatus(new StaticThinkingLabelProvider(options.labels)),
+    getThinkingStatus: new GetThinkingStatus(
+      new StaticThinkingLabelProvider(resolveThinkingLabels(options.locale, options.labels)),
+    ),
   };
 
   class RegisteredThinkingOrb extends DzThinkingOrb {
