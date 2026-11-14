@@ -251,21 +251,22 @@ de npm para publicar, que **nunca** se guarda en el repositorio (ver
 
 ## Scripts disponibles
 
-| Script                          | Qué hace                                                                     |
-| ------------------------------- | ---------------------------------------------------------------------------- |
-| `npm run dev`                   | Build en modo watch                                                          |
-| `npm run build`                 | Genera `dist/` (ESM + `.d.ts`), `custom-elements.json` y los tipos React/Vue |
-| `npm test`                      | Corre los tests una vez                                                      |
-| `npm run test:watch`            | Tests en modo watch                                                          |
-| `npm run typecheck`             | Chequeo de tipos general + pureza del núcleo                                 |
-| `npm run lint`                  | ESLint + reglas de arquitectura                                              |
-| `npm run lint:arch`             | Solo reglas de arquitectura (dependency-cruiser)                             |
-| `npm run lint:fix`              | ESLint con autofix                                                           |
-| `npm run format`                | Formatea todo con Prettier                                                   |
-| `npm run check:exports`         | Verifica que los exports y tipos del paquete resuelvan bien                  |
-| `npm run check:side-effects`    | Bundlea cada `*/define` como una app y verifica que registre sus componentes |
-| `npm run check:framework-types` | Compila `test-types/` contra los tipos React/Vue publicados                  |
-| `npm run validate`              | Todo lo anterior, en el mismo orden que CI                                   |
+| Script                          | Qué hace                                                                                                                             |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `npm run dev`                   | Build en modo watch                                                                                                                  |
+| `npm run build`                 | Genera `dist/` (ESM + `.d.ts`), `custom-elements.json` y los tipos React/Vue                                                         |
+| `npm test`                      | Corre los tests una vez                                                                                                              |
+| `npm run test:watch`            | Tests en modo watch                                                                                                                  |
+| `npm run typecheck`             | Chequeo de tipos general + pureza del núcleo                                                                                         |
+| `npm run lint`                  | ESLint + reglas de arquitectura                                                                                                      |
+| `npm run lint:arch`             | Solo reglas de arquitectura (dependency-cruiser)                                                                                     |
+| `npm run lint:fix`              | ESLint con autofix                                                                                                                   |
+| `npm run format`                | Formatea todo con Prettier                                                                                                           |
+| `npm run check:exports`         | Verifica que los exports y tipos del paquete resuelvan bien                                                                          |
+| `npm run check:side-effects`    | Bundlea cada `*/define` como una app y verifica que registre sus componentes                                                         |
+| `npm run check:framework-types` | Compila `test-types/` contra los tipos React/Vue publicados                                                                          |
+| `npm run validate`              | Todo lo anterior, en el mismo orden que CI                                                                                           |
+| `npm run media`                 | Graba los GIFs del README en `docs/media/` (requiere `npm run build` y Edge o Chrome; `npm run media -- orbs` graba solo una escena) |
 
 ---
 

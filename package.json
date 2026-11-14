@@ -106,7 +106,8 @@
     "prepublishOnly": "npm run validate",
     "prepare": "simple-git-hooks",
     "check:side-effects": "node scripts/check-side-effects.mjs",
-    "check:framework-types": "tsc -p test-types/tsconfig.json"
+    "check:framework-types": "tsc -p test-types/tsconfig.json",
+    "media": "node scripts/media/record.mjs"
   },
   "simple-git-hooks": {
     "commit-msg": "node scripts/validate-commit-msg.mjs $1",
@@ -127,9 +128,12 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-lit": "^2.3.1",
     "eslint-plugin-wc": "^3.1.0",
+    "gifenc": "^1.0.3",
     "globals": "^17.14.0",
     "jsdom": "^29.1.1",
+    "pngjs": "^7.0.0",
     "prettier": "^3.10.1",
+    "puppeteer-core": "^23.11.1",
     "simple-git-hooks": "^2.14.0",
     "tsup": "^9.0.0",
     "typescript": "~5.9",

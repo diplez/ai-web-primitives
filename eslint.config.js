@@ -64,5 +64,11 @@ export default tseslint.config(
     rules: { "no-console": "off", "@typescript-eslint/no-require-imports": "off" },
   },
 
+  // GIFs del README: las escenas y los callbacks de page.evaluate() corren en el navegador.
+  {
+    files: ["scripts/media/*.mjs"],
+    languageOptions: { globals: { ...globals.node, ...globals.browser } },
+  },
+
   prettier,
 );
