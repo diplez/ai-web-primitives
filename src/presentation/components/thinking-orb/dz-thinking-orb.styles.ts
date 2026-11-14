@@ -28,6 +28,10 @@ export const thinkingOrbStyles = css`
     color: var(--dz-orb-label-color, currentColor);
   }
 
+  .color-probe {
+    display: none;
+  }
+
   .visually-hidden {
     position: absolute;
     width: 1px;

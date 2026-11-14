@@ -31,7 +31,9 @@ export interface ThinkingOrbDependencies {
  * @csspart orb - Contenedor del lienzo del orbe.
  * @csspart label - Texto de estado. Siempre disponible para lectores de pantalla; visible con `show-label`.
  * @cssprop [--dz-orb-size=96px] - Tamaño del orbe (ancho y alto).
- * @cssprop --dz-orb-hue - Matiz principal (número 0–360). Sobrescribe el color de la fase.
+ * @cssprop --dz-orb-color - Color principal (cualquier color CSS: `#ff0066`, `hotpink`, `var(--dz-accent)`). Sobrescribe el de la fase.
+ * @cssprop --dz-orb-accent - Color de acento de núcleo, anillos y partículas (cualquier color CSS).
+ * @cssprop --dz-orb-hue - Matiz principal (número 0–360). Alternativa numérica a `--dz-orb-color`.
  * @cssprop --dz-orb-accent-hue - Matiz de acento (número 0–360) de núcleo, anillos y partículas.
  * @cssprop --dz-orb-saturation - Saturación (número 0–100).
  * @cssprop [--dz-orb-label-color=currentColor] - Color del texto de estado.
@@ -57,6 +59,14 @@ export class DzThinkingOrb extends LitElement {
   private resizeObserver: ResizeObserver | null = null;
   private intersectionObserver: IntersectionObserver | null = null;
 
+  /**
+   * Vuelve a leer los colores de CSS y transiciona hacia ellos. Útil después de cambiar
+   * `--dz-orb-color` o el tema sin cambiar de fase (los cambios de fase ya los leen solos).
+   */
+  refreshColors(): void {
+    this.animation?.setPhase(this.phase, this.palette());
+  }
+
   override connectedCallback(): void {
     super.connectedCallback();
     // Al re-insertarse en el DOM (p. ej. al moverlo) se reanuda la animación.
@@ -74,7 +84,7 @@ export class DzThinkingOrb extends LitElement {
 
   protected override updated(changed: PropertyValues<this>): void {
     if (changed.has("phase") && changed.get("phase") !== undefined) {
-      this.animation?.setPhase(this.phase, readOrbPalette(getComputedStyle(this)));
+      this.animation?.setPhase(this.phase, this.palette());
     }
   }
 
@@ -85,6 +95,7 @@ export class DzThinkingOrb extends LitElement {
     });
 
     return html`<div part="orb" class="orb"><canvas aria-hidden="true"></canvas></div>
+      <span class="color-probe" aria-hidden="true"></span>
       <span
         part="label"
         class=${this.showLabel ? "label" : "label visually-hidden"}
@@ -113,7 +124,7 @@ export class DzThinkingOrb extends LitElement {
 
     this.animation = this.getDependencies().animateThinkingOrb.execute({
       phase: this.phase,
-      palette: readOrbPalette(getComputedStyle(this)),
+      palette: this.palette(),
       onFrame: (frame) => this.renderer?.draw(frame),
     });
 
@@ -124,6 +135,19 @@ export class DzThinkingOrb extends LitElement {
       });
       this.intersectionObserver.observe(this);
     }
+  }
+
+  private palette() {
+    return readOrbPalette(getComputedStyle(this), (color) => this.resolveColor(color));
+  }
+
+  /** Normaliza cualquier color CSS a `rgb(…)` con un elemento de prueba en el shadow DOM. */
+  private resolveColor(color: string): string {
+    const probe = this.renderRoot.querySelector<HTMLElement>(".color-probe");
+    if (!probe) return color;
+    probe.style.color = "";
+    probe.style.color = color;
+    return getComputedStyle(probe).color;
   }
 
   private stopAnimation(): void {
