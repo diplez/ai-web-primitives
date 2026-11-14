@@ -1,17 +1,32 @@
 # @diplez/ai-web-primitives
 
-Librería de **Web Components** para interfaces de Inteligencia Artificial: UI de razonamiento,
-UI generativa, _human-in-the-loop_ y voz. Construida con [Lit](https://lit.dev) sobre
-**Clean Architecture**, funciona en React, Vue, Angular, Svelte o HTML plano.
+Componentes de interfaz para aplicaciones de IA, como **Web Components**: funcionan igual en
+React, Vue, Angular, Svelte o HTML plano. Muestran lo que hace el modelo (piensa, razona, pide
+permiso, responde y cita) con una sola línea de código y se adaptan a tu marca cambiando una
+variable de color.
 
-> Estado: desarrollo temprano (`0.0.x`). La API pública puede cambiar entre versiones menores
-> hasta la `1.0.0`. Roadmap de componentes: [`docs/ideas-libreria-componentes-ia.md`](docs/ideas-libreria-componentes-ia.md).
+> Estado: desarrollo temprano (`0.x`). La API pública puede cambiar entre versiones menores hasta
+> la `1.0.0`. Roadmap: [`docs/ideas-libreria-componentes-ia.md`](docs/ideas-libreria-componentes-ia.md).
+
+| Componente                | Para qué sirve                                                                  |
+| ------------------------- | ------------------------------------------------------------------------------- |
+| `<dz-markdown>`           | Respuesta del modelo en markdown, **en streaming**, segura y conectada a tu API |
+| `<dz-reasoning>`          | Pasos del agente en vivo: "Pensando… 2 de 5 pasos" → "Pensó durante 12 s"       |
+| `<dz-approval>`           | El agente pide permiso antes de una acción, con cuenta regresiva opcional       |
+| `<dz-citation>`           | Cita de una fuente (RAG) con fragmento y nivel de coincidencia                  |
+| `<dz-thinking-orb>`       | Orbe animado que expresa la fase del modelo con movimiento                      |
+| `<dz-thinking-indicator>` | Indicador de estado en texto, sin estilos propios                               |
 
 ---
 
 ## Tabla de contenidos
 
-- [Uso rápido](#uso-rápido)
+- [Empezar en 1 minuto](#empezar-en-1-minuto)
+- [Componentes](#componentes)
+- [Colores y tema](#colores-y-tema)
+- [Conectar con tu modelo (streaming)](#conectar-con-tu-modelo-streaming)
+- [Idiomas](#idiomas)
+- [Uso con frameworks](#uso-con-frameworks)
 - [Concepto de arquitectura](#concepto-de-arquitectura)
 - [Cómo se hace cumplir la arquitectura](#cómo-se-hace-cumplir-la-arquitectura)
 - [Estructura del proyecto](#estructura-del-proyecto)
@@ -30,39 +45,167 @@ UI generativa, _human-in-the-loop_ y voz. Construida con [Lit](https://lit.dev) 
 
 ---
 
-## Uso rápido
+## Empezar en 1 minuto
 
 ```bash
 npm install @diplez/ai-web-primitives
 ```
 
-### Registrar los componentes
-
 ```js
-// Opción 1 — registra TODOS los componentes con la configuración por defecto
-import "@diplez/ai-web-primitives/define";
-
-// Opción 2 — registra solo uno (mejor tree-shaking)
-import "@diplez/ai-web-primitives/thinking-orb/define";
-
-// Opción 3 — registro configurable (etiqueta, idioma, registro de custom elements)
-import { defineThinkingOrb, SPANISH_THINKING_LABELS } from "@diplez/ai-web-primitives";
-defineThinkingOrb({ labels: SPANISH_THINKING_LABELS });
+import { defineAll } from "@diplez/ai-web-primitives";
+defineAll({ locale: "es" }); // registra todos los componentes, con textos en español
 ```
 
 ```html
-<dz-thinking-orb phase="generating"></dz-thinking-orb>
-<dz-thinking-orb phase="searching" show-label style="--dz-orb-size: 64px"></dz-thinking-orb>
+<dz-reasoning id="pasos"></dz-reasoning>
+<dz-markdown id="respuesta"></dz-markdown>
 
-<dz-thinking-indicator phase="searching"></dz-thinking-indicator>
-<dz-thinking-indicator phase="generating" label="Redactando…"></dz-thinking-indicator>
+<script type="module">
+  const respuesta = document.querySelector("#respuesta");
+  // Funciona con la respuesta de OpenAI, Anthropic, Vercel AI SDK o texto plano.
+  await respuesta.stream(await fetch("/api/chat", { method: "POST", body: "…" }));
+</script>
 ```
+
+Otras formas de registrar:
+
+```js
+import "@diplez/ai-web-primitives/define"; // todo, en inglés
+import "@diplez/ai-web-primitives/markdown/define"; // solo un componente (mejor tree-shaking)
+import { defineMarkdown } from "@diplez/ai-web-primitives";
+defineMarkdown({ tagName: "mi-markdown", locale: "es", messages: { copy: "Copiar código" } });
+```
+
+> El import raíz (`@diplez/ai-web-primitives`) **no registra nada** por sí solo: registrar es
+> siempre explícito, con `defineAll()`, un `define*()` o un import `…/define`.
+
+**Sin bundler** (HTML plano, prototipos):
+
+```html
+<script type="module">
+  import { defineAll } from "https://cdn.jsdelivr.net/npm/@diplez/ai-web-primitives/+esm";
+  defineAll({ locale: "es" });
+</script>
+```
+
+---
+
+## Componentes
+
+### `<dz-markdown>`: respuestas en streaming
+
+```html
+<dz-markdown> # Puedes escribir el markdown **dentro** de la etiqueta </dz-markdown>
+```
+
+```js
+const md = document.querySelector("dz-markdown");
+
+md.content = "# Hola"; // reemplazar
+md.appendText(" mundo"); // agregar (si manejas el stream tú)
+const { text, aborted } = await md.stream(response, { signal: controller.signal });
+```
+
+- **Seguro por construcción**: el markdown se convierte en un árbol y se pinta con plantillas;
+  nunca se usa `innerHTML`. Se descartan enlaces `javascript:`/`data:` y las imágenes se muestran
+  como enlaces (no se cargan recursos de terceros). Apto para texto no confiable.
+- **Tolerante al streaming**: `**negrita`, `` `código `` y enlaces a medio llegar se ven bien;
+  las tablas aparecen recién cuando su estructura es inequívoca; cursor parpadeante mientras escribe.
+- **Rendimiento**: aunque lleguen cientos de deltas por segundo, renderiza como mucho una vez por frame.
+- Soporta CommonMark + tablas, tachado, listas de tareas y URLs sueltas (GFM). Bloques de código
+  con lenguaje y botón **Copiar**.
+
+| Propiedad / atributo | Tipo      | Descripción                                          |
+| -------------------- | --------- | ---------------------------------------------------- |
+| `content`            | `string`  | Texto markdown                                       |
+| `streaming`          | `boolean` | Activa la tolerancia a contenido cortado y el cursor |
+
+| Método                     | Descripción                                                                                                   |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `stream(source, options?)` | Consume `Response`, `ReadableStream` o `AsyncIterable`. Opciones: `format`, `signal`, `append`, `onReasoning` |
+| `appendText(text)`         | Agrega texto al final                                                                                         |
+| `clear()`                  | Vacía el contenido                                                                                            |
+
+Eventos: `dz-stream-start`, `dz-stream-end` (`{ text, aborted }`), `dz-stream-error` (`{ error }`),
+`dz-reasoning` (`{ delta }`), `dz-copy` (`{ text, language }`).
+
+### `<dz-reasoning>`: pasos del agente
+
+```html
+<dz-reasoning steps='["Leer el repositorio", "Buscar usos de la API"]'></dz-reasoning>
+```
+
+```js
+const panel = document.querySelector("dz-reasoning");
+const paso = panel.addStep("Buscando en la documentación"); // queda "en curso"
+panel.appendDetail(paso, "3 resultados en docs/api.md");
+panel.updateStep(paso, { status: "done" });
+panel.finish(); // marca lo pendiente como hecho → "Pensó durante 4 s"
+
+// O todo de una vez, p. ej. desde el estado de tu app:
+panel.steps = [
+  { title: "Leer", status: "done" },
+  { title: "Buscar", status: "running", detail: "…" },
+  { title: "Responder", status: "pending" },
+];
+```
+
+Estados de un paso: `pending`, `running`, `done`, `error`. Atributos: `steps` (JSON), `open`,
+`heading` (titular fijo). Evento: `dz-toggle` (`{ open }`). El cronómetro arranca solo con el
+primer paso en curso.
+
+### `<dz-approval>`: permiso antes de actuar
+
+```html
+<dz-approval heading="Borrar 3 archivos" tone="danger" timeout="15">
+  El agente quiere eliminar la carpeta <code>build/</code>.
+  <pre slot="details">rm -rf build/</pre>
+</dz-approval>
+```
+
+```js
+document.querySelector("dz-approval").addEventListener("dz-decision", (event) => {
+  const { decision, reason } = event.detail; // "approved" | "denied", "user" | "timeout"
+});
+```
+
+| Atributo                      | Valores                           | Descripción                                |
+| ----------------------------- | --------------------------------- | ------------------------------------------ |
+| `heading`                     | texto                             | Título de la solicitud                     |
+| `tone`                        | `neutral` · `warning` · `danger`  | Énfasis según el riesgo                    |
+| `timeout`                     | segundos                          | Cuenta regresiva (sin valor: sin límite)   |
+| `timeout-action`              | `deny` (por defecto) · `approve`  | Qué pasa al vencer. Por seguridad, deniega |
+| `approve-label`, `deny-label` | texto                             | Textos de los botones                      |
+| `status`                      | `pending` · `approved` · `denied` | Estado (reflejado, para estilizar)         |
+
+La cuenta regresiva **se pausa** mientras la persona pasa el mouse o tiene el foco en la tarjeta
+(WCAG 2.2.1). Métodos: `approve()`, `deny()`, `reset()`. Eventos: `dz-approve`, `dz-deny`,
+`dz-decision`.
+
+### `<dz-citation>`: fuentes (RAG)
+
+```html
+<p>
+  La API admite paginación por cursor
+  <dz-citation
+    index="1"
+    source="Guía de la API"
+    href="https://docs.example.com/pagination"
+    snippet="Use the cursor returned in the previous page…"
+    confidence="0.92"
+  ></dz-citation
+  >.
+</p>
+```
+
+Al pasar el mouse, enfocar o tocar la pastilla se muestra la fuente, su dominio, el fragmento y
+el nivel de coincidencia (`0.92`, `92` o `"92%"`). La tarjeta usa la Popover API, así que no
+la recortan los contenedores con `overflow`. Evento: `dz-citation-open`.
 
 ### `<dz-thinking-orb>`: orbes de pensamiento
 
 Un orbe animado que comunica en qué está el modelo **con movimiento, no solo con color**. Cada
-fase tiene una metáfora propia y el orbe se transforma de una a otra de forma continua, emitiendo
-una onda en cada cambio:
+fase tiene una metáfora propia y el orbe se transforma de una a otra de forma continua:
 
 | Fase         | Metáfora    | Qué se ve                                                                       |
 | ------------ | ----------- | ------------------------------------------------------------------------------- |
@@ -72,59 +215,155 @@ una onda en cada cambio:
 | `generating` | Forja       | Superficie turbulenta, núcleo que gira rápido y tokens emitidos en espiral      |
 | `done`       | Calma       | Se asienta en verde                                                             |
 
-```js
-const orb = document.querySelector("dz-thinking-orb");
-orb.phase = "analyzing"; // al cambiar la propiedad o el atributo, el orbe transiciona solo
+```html
+<dz-thinking-orb phase="generating" show-label style="--dz-orb-size: 64px"></dz-thinking-orb>
 ```
 
-- **Accesibilidad**: el canvas está oculto a lectores de pantalla; el estado se anuncia con un
-  `role="status"` (visible con `show-label`). Con `prefers-reduced-motion` muestra una pose
-  estática por fase, sin animación.
-- **Rendimiento**: se pausa cuando sale de la pantalla y cuando la pestaña está oculta;
-  ajusta la resolución al `devicePixelRatio`.
-- **Colores propios**: por fase, con CSS custom properties numéricas (se interpolan en las transiciones):
+Respeta `prefers-reduced-motion` (pose estática), se pausa fuera de pantalla y anuncia el estado
+a lectores de pantalla. Método `refreshColors()` para aplicar colores nuevos sin cambiar de fase.
+
+### `<dz-thinking-indicator>`: estado en texto
+
+```html
+<dz-thinking-indicator phase="searching"></dz-thinking-indicator>
+```
+
+Muestra "Buscando fuentes…" con `role="status"`. Sin estilos propios: se estiliza con
+`::part(indicator)` y `[phase="…"]`.
+
+---
+
+## Colores y tema
+
+Todos los componentes comparten tokens de tema. **Cambiar uno lo cambia en toda la librería**:
 
 ```css
-dz-thinking-orb[phase="generating"] {
-  --dz-orb-hue: 340; /* matiz principal, 0–360 */
-  --dz-orb-accent-hue: 20; /* matiz de núcleo, anillos y partículas */
-  --dz-orb-saturation: 90; /* 0–100 */
+:root {
+  --dz-accent: #e11d48; /* tu color de marca */
+  --dz-radius: 14px;
+  --dz-font: "Inter", system-ui, sans-serif;
 }
 ```
 
-> El import raíz (`@diplez/ai-web-primitives`) **no registra nada**: solo exporta clases,
-> funciones y tipos. Registrar es siempre explícito.
+| Token                                         | Uso                                              |
+| --------------------------------------------- | ------------------------------------------------ |
+| `--dz-accent`                                 | Color principal: enlaces, botones, paso en curso |
+| `--dz-accent-contrast`                        | Texto sobre el color principal                   |
+| `--dz-text`, `--dz-muted`                     | Texto principal y secundario                     |
+| `--dz-surface`, `--dz-surface-raised`         | Fondos de tarjetas y cabeceras                   |
+| `--dz-border`                                 | Bordes                                           |
+| `--dz-success`, `--dz-warning`, `--dz-danger` | Estados                                          |
+| `--dz-radius`                                 | Radio de las esquinas                            |
+| `--dz-font`, `--dz-font-mono`                 | Tipografías                                      |
+| `--dz-code-bg`                                | Fondo de los bloques de código                   |
+| `--dz-focus`                                  | Anillo de foco (por defecto, el acento)          |
 
-### Por framework
+**Modo oscuro automático**: los valores por defecto siguen el `color-scheme` de tu página. Si tu
+sitio declara `color-scheme: light dark` (o `dark`), los componentes se adaptan solos.
 
-| Entorno           | Cómo usarlo                                                                                                           |
-| ----------------- | --------------------------------------------------------------------------------------------------------------------- |
-| **HTML / CDN**    | `<script type="module" src="https://cdn.jsdelivr.net/npm/@diplez/ai-web-primitives/dist/define.js/+esm"></script>`    |
-| **React 19+**     | Importar el `define` una vez y usar `<dz-thinking-indicator phase={phase} />`. React 19 pasa props a custom elements. |
-| **Next.js / SSR** | Importar el `define` dentro de un componente `"use client"`. Los custom elements se registran en el navegador.        |
-| **Vue**           | `compilerOptions.isCustomElement: (tag) => tag.startsWith("dz-")` en el plugin de Vue de Vite.                        |
-| **Angular**       | Agregar `CUSTOM_ELEMENTS_SCHEMA` al módulo/componente standalone.                                                     |
-| **Svelte**        | Funciona directo; importar el `define` en el `<script>` del componente raíz.                                          |
+**Más control**: cada componente expone `::part(...)` para estilizar piezas internas y refleja su
+estado como atributo (`dz-approval[status="approved"]`, `dz-thinking-orb[phase="done"]`).
 
-### Estilos
+**Orbes**: aceptan cualquier color CSS, por fase o para todas:
 
-Los componentes usan Shadow DOM. Se personalizan desde afuera con:
+```css
+dz-thinking-orb {
+  --dz-orb-color: var(--dz-accent); /* el orbe toma tu color de marca */
+}
+dz-thinking-orb[phase="generating"] {
+  --dz-orb-color: hotpink;
+  --dz-orb-accent: orange; /* núcleo, anillos y partículas */
+}
+```
 
-| Mecanismo             | Ejemplo                                                       |
-| --------------------- | ------------------------------------------------------------- |
-| Atributos reflejados  | `dz-thinking-indicator[phase="generating"] { opacity: .6 }`   |
-| CSS parts             | `dz-thinking-indicator::part(indicator) { font-weight: 600 }` |
-| CSS custom properties | `dz-thinking-indicator { --dz-thinking-color: #7c3aed }`      |
+---
 
-El paquete incluye `custom-elements.json` (manifiesto estándar) para autocompletado en el IDE y
+## Conectar con tu modelo (streaming)
+
+`<dz-markdown>.stream()` reconoce solo el formato de la respuesta:
+
+| Proveedor / formato                           | Detecta                         |
+| --------------------------------------------- | ------------------------------- |
+| OpenAI Chat Completions y Responses API       | texto y resumen de razonamiento |
+| Anthropic Messages                            | texto y `thinking`              |
+| Vercel AI SDK (v4 data stream y v5 UI stream) | texto y razonamiento            |
+| Texto plano                                   | todo como texto                 |
+
+```js
+const md = document.querySelector("dz-markdown");
+const pasos = document.querySelector("dz-reasoning");
+const paso = pasos.addStep("Pensando");
+
+await md.stream(await fetch("/api/chat", { method: "POST", body }), {
+  onReasoning: (delta) => pasos.appendDetail(paso, delta), // el "thinking" del modelo
+});
+pasos.finish();
+```
+
+También acepta un `AsyncIterable<string>`, útil con los SDKs oficiales:
+
+```js
+const stream = await openai.chat.completions.create({ model, messages, stream: true });
+await md.stream(
+  (async function* () {
+    for await (const chunk of stream) yield chunk.choices[0]?.delta?.content ?? "";
+  })(),
+);
+```
+
+Sin componentes, los mismos adaptadores están disponibles como funciones:
+
+```js
+import { toStreamEvents, toTextStream, parseMarkdown } from "@diplez/ai-web-primitives";
+
+for await (const event of toStreamEvents(await fetch("/api/chat"))) {
+  // { type: "text" | "reasoning", delta }
+}
+```
+
+---
+
+## Idiomas
+
+Inglés (`en`, por defecto) y español (`es`) incluidos: `defineAll({ locale: "es" })`. Cada
+`define*()` acepta además `messages` para cambiar cualquier texto, o para traducir a otro idioma:
+
+```js
+defineApproval({ messages: { approve: "Autorizar", autoDenyIn: "Se cancela en {seconds} s" } });
+```
+
+---
+
+## Uso con frameworks
+
+| Entorno           | Cómo usarlo                                                                                                                         |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| **React 19+**     | `defineAll()` una vez y usar las etiquetas. Tipos: `import type {} from "@diplez/ai-web-primitives/react"`                          |
+| **Next.js / SSR** | Llamar `defineAll()` dentro de un componente `"use client"` (se registran en el navegador)                                          |
+| **Vue 3**         | `isCustomElement: (tag) => tag.startsWith("dz-")` en el plugin de Vue. Tipos: `import type {} from "@diplez/ai-web-primitives/vue"` |
+| **Angular**       | Agregar `CUSTOM_ELEMENTS_SCHEMA` al componente                                                                                      |
+| **Svelte / HTML** | Funciona directo                                                                                                                    |
+
+**React**: las propiedades (`phase`, `steps`, `content`…) se pasan como props y quedan tipadas. Los
+eventos se escuchan con una `ref`:
+
+```tsx
+import type {} from "@diplez/ai-web-primitives/react";
+
+function Aprobacion({ onDecision }: { onDecision: (approved: boolean) => void }) {
+  const ref = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const el = ref.current!;
+    const handler = (e: Event) => onDecision((e as CustomEvent).detail.decision === "approved");
+    el.addEventListener("dz-decision", handler);
+    return () => el.removeEventListener("dz-decision", handler);
+  }, [onDecision]);
+  return <dz-approval ref={ref} heading="Enviar el correo" tone="warning" timeout={20} />;
+}
+```
+
+El paquete incluye `custom-elements.json` (manifiesto estándar) para autocompletado en VS Code y
 herramientas de documentación.
-
-### Componentes disponibles
-
-| Etiqueta                  | Atributos                                                                                   | Parts          | CSS props                                                                                             |
-| ------------------------- | ------------------------------------------------------------------------------------------- | -------------- | ----------------------------------------------------------------------------------------------------- |
-| `<dz-thinking-orb>`       | `phase` (`idle` · `analyzing` · `searching` · `generating` · `done`), `label`, `show-label` | `orb`, `label` | `--dz-orb-size`, `--dz-orb-hue`, `--dz-orb-accent-hue`, `--dz-orb-saturation`, `--dz-orb-label-color` |
-| `<dz-thinking-indicator>` | `phase` (`idle` · `analyzing` · `searching` · `generating` · `done`), `label`               | `indicator`    | `--dz-thinking-color`                                                                                 |
 
 ---
 
@@ -229,74 +468,73 @@ Hooks de git (instalados automáticamente con `npm install` vía `simple-git-hoo
 
 ## Estructura del proyecto
 
+Cada capa se organiza por funcionalidad (`thinking`, `orb`, `markdown`, `stream`, `reasoning`,
+`approval`, `citation`). Cada archivo tiene su `*.test.ts` al lado.
+
 ```
 ai-web-primitives/
 ├── src/
-│   ├── index.ts                                   # API pública SIN efectos secundarios
-│   ├── define.ts                                  # Registra todos los componentes
+│   ├── index.ts                          # API pública SIN efectos secundarios
+│   ├── define.ts                         # Registra todos los componentes (defineAll)
 │   │
-│   ├── domain/                                    # Núcleo puro — sin DOM, sin paquetes npm
-│   │   ├── thinking/
-│   │   │   ├── thinking-phase.ts                  # Value object + reglas (isBusyPhase)
-│   │   │   └── thinking-status.ts                 # Estado inmutable
-│   │   └── orb/
-│   │       ├── orb-profile.ts                     # Personalidad visual de cada fase + mezcla
-│   │       ├── orb-transition.ts                  # Transiciones suaves y onda de cambio
-│   │       └── orb-geometry.ts                    # Contorno, partículas, anillos, sonar (puro)
+│   ├── domain/                           # Núcleo puro — sin DOM, sin paquetes npm
+│   │   ├── shared/                       # safe-url (anti-XSS), color, template (i18n), dedent
+│   │   ├── thinking/                     # Fases del modelo y su estado
+│   │   ├── orb/                          # Perfiles por fase, transiciones, geometría del orbe
+│   │   ├── markdown/                     # AST + parser tolerante al streaming
+│   │   ├── stream/                       # Decodificador SSE + formatos OpenAI/Anthropic/AI SDK
+│   │   ├── reasoning/                    # Pasos y progreso del razonamiento
+│   │   ├── approval/                     # Decisiones, tonos y cuenta regresiva pausable
+│   │   └── citation/                     # Nivel de confianza
 │   │
-│   ├── application/                               # Casos de uso — solo depende de domain
-│   │   ├── dtos/
-│   │   │   ├── thinking-status-dto.ts
-│   │   │   └── orb-frame-dto.ts                   # Un frame listo para dibujar
-│   │   ├── ports/
-│   │   │   ├── thinking-label-provider.ts         # i18n
-│   │   │   ├── frame-scheduler.ts                 # Reloj de animación
-│   │   │   └── motion-preference.ts               # prefers-reduced-motion
+│   ├── application/                      # Casos de uso — solo depende de domain
+│   │   ├── ports/                        # Clock, FrameScheduler, MotionPreference,
+│   │   │                                 # StreamEventSource, ClipboardWriter, UiMessages…
+│   │   ├── dtos/                         # ThinkingStatusDto, OrbFrameDto
 │   │   └── use-cases/
-│   │       ├── thinking/get-thinking-status.ts
-│   │       └── orb/
-│   │           ├── animate-thinking-orb.ts        # Orquesta bucle, fases, pausa, accesibilidad
-│   │           └── compose-orb-frame.ts
+│   │       ├── thinking/                 # GetThinkingStatus
+│   │       ├── orb/                      # AnimateThinkingOrb, composeOrbFrame
+│   │       ├── markdown/                 # StreamMarkdown (agrupa deltas por frame)
+│   │       ├── reasoning/                # DescribeReasoning
+│   │       └── approval/                 # RunApprovalCountdown
 │   │
-│   ├── infrastructure/                            # Adaptadores de los puertos
-│   │   ├── i18n/static-thinking-label-provider.ts # Etiquetas en/es
-│   │   └── browser/
-│   │       ├── animation-frame-scheduler.ts       # requestAnimationFrame
-│   │       └── media-query-motion-preference.ts   # matchMedia
+│   ├── infrastructure/                   # Adaptadores de los puertos
+│   │   ├── i18n/                         # Textos en inglés y español
+│   │   ├── browser/                      # requestAnimationFrame, matchMedia, reloj, portapapeles
+│   │   └── stream/                       # FetchStreamEventSource (Response, ReadableStream…)
 │   │
-│   ├── presentation/                              # Web Components (Lit)
+│   ├── presentation/                     # Web Components (Lit): solo pintan y emiten eventos
+│   │   ├── theme/theme-tokens.ts         # Tokens --dz-* compartidos (claro/oscuro)
 │   │   └── components/
-│   │       ├── thinking-indicator/
-│   │       │   ├── dz-thinking-indicator.ts       # El custom element
-│   │       │   └── dz-thinking-indicator.styles.ts
-│   │       └── thinking-orb/
-│   │           ├── dz-thinking-orb.ts             # El custom element
-│   │           ├── dz-thinking-orb.styles.ts
-│   │           ├── orb-canvas-renderer.ts         # Solo pinta el DTO en canvas 2D
-│   │           └── read-orb-palette.ts            # Lee --dz-orb-* del CSS
+│   │       ├── markdown/                 # <dz-markdown>
+│   │       ├── reasoning/                # <dz-reasoning>
+│   │       ├── approval/                 # <dz-approval>
+│   │       ├── citation/                 # <dz-citation>
+│   │       ├── thinking-orb/             # <dz-thinking-orb> + renderer de canvas
+│   │       └── thinking-indicator/       # <dz-thinking-indicator>
 │   │
-│   └── composition/                               # Composition root por componente
-│       ├── thinking-indicator/
-│       │   ├── define-thinking-indicator.ts       # Arma dependencias + registra
-│       │   └── define.ts                          # Entry con efecto: registra por defecto
-│       └── thinking-orb/
-│           ├── define-thinking-orb.ts
-│           └── define.ts
-│
-│   (cada archivo tiene su *.test.ts al lado)
+│   └── composition/                      # Composition roots
+│       ├── shared/locale.ts              # Resuelve idioma y textos
+│       ├── define-all.ts                 # defineAll({ locale })
+│       ├── stream/stream-helpers.ts      # toStreamEvents / toTextStream
+│       └── <componente>/
+│           ├── define-<componente>.ts    # Arma dependencias + registra (idempotente)
+│           └── define.ts                 # Entry con efecto: registra con valores por defecto
 │
 ├── scripts/
-│   └── validate-commit-msg.mjs                    # Hook commit-msg
-├── docs/
-│   └── ideas-libreria-componentes-ia.md           # Roadmap de componentes
-├── .github/workflows/ci.yml                       # CI: format, lint, typecheck, test, build
-├── .dependency-cruiser.cjs                        # Reglas de capas
+│   ├── validate-commit-msg.mjs           # Hook commit-msg
+│   ├── check-exports.mjs                 # attw sin heredar --dry-run
+│   ├── check-side-effects.mjs            # Verifica que cada */define registre con bundlers
+│   └── generate-framework-types.mjs      # Tipos React/Vue desde custom-elements.json
+├── test-types/                           # Verifica que los tipos React/Vue compilen y detecten errores
+├── docs/ideas-libreria-componentes-ia.md # Roadmap de componentes
+├── .github/workflows/ci.yml              # CI: lo mismo que npm run validate
+├── .dependency-cruiser.cjs               # Reglas de capas
 ├── eslint.config.js
-├── tsconfig.json                                  # Config general
-├── tsconfig.core.json                             # Chequeo de pureza domain + application
-├── tsup.config.ts                                 # Build ESM + .d.ts
-├── vitest.config.ts / vitest.setup.ts             # Tests (jsdom)
-└── custom-elements-manifest.config.mjs            # Genera custom-elements.json
+├── tsconfig.json / tsconfig.core.json    # General / pureza de domain + application
+├── tsup.config.ts                        # Build ESM + .d.ts
+├── vitest.config.ts / vitest.setup.ts    # Tests (jsdom)
+└── custom-elements-manifest.config.mjs   # Genera custom-elements.json
 ```
 
 ---
@@ -359,20 +597,21 @@ de npm para publicar, que **nunca** se guarda en el repositorio (ver
 
 ## Scripts disponibles
 
-| Script                       | Qué hace                                                                     |
-| ---------------------------- | ---------------------------------------------------------------------------- |
-| `npm run dev`                | Build en modo watch                                                          |
-| `npm run build`              | Genera `dist/` (ESM + `.d.ts`) y `custom-elements.json`                      |
-| `npm test`                   | Corre los tests una vez                                                      |
-| `npm run test:watch`         | Tests en modo watch                                                          |
-| `npm run typecheck`          | Chequeo de tipos general + pureza del núcleo                                 |
-| `npm run lint`               | ESLint + reglas de arquitectura                                              |
-| `npm run lint:arch`          | Solo reglas de arquitectura (dependency-cruiser)                             |
-| `npm run lint:fix`           | ESLint con autofix                                                           |
-| `npm run format`             | Formatea todo con Prettier                                                   |
-| `npm run check:exports`      | Verifica que los exports y tipos del paquete resuelvan bien                  |
-| `npm run check:side-effects` | Bundlea cada `*/define` como una app y verifica que registre sus componentes |
-| `npm run validate`           | Todo lo anterior, en el mismo orden que CI                                   |
+| Script                          | Qué hace                                                                     |
+| ------------------------------- | ---------------------------------------------------------------------------- |
+| `npm run dev`                   | Build en modo watch                                                          |
+| `npm run build`                 | Genera `dist/` (ESM + `.d.ts`), `custom-elements.json` y los tipos React/Vue |
+| `npm test`                      | Corre los tests una vez                                                      |
+| `npm run test:watch`            | Tests en modo watch                                                          |
+| `npm run typecheck`             | Chequeo de tipos general + pureza del núcleo                                 |
+| `npm run lint`                  | ESLint + reglas de arquitectura                                              |
+| `npm run lint:arch`             | Solo reglas de arquitectura (dependency-cruiser)                             |
+| `npm run lint:fix`              | ESLint con autofix                                                           |
+| `npm run format`                | Formatea todo con Prettier                                                   |
+| `npm run check:exports`         | Verifica que los exports y tipos del paquete resuelvan bien                  |
+| `npm run check:side-effects`    | Bundlea cada `*/define` como una app y verifica que registre sus componentes |
+| `npm run check:framework-types` | Compila `test-types/` contra los tipos React/Vue publicados                  |
+| `npm run validate`              | Todo lo anterior, en el mismo orden que CI                                   |
 
 ---
 
@@ -382,16 +621,16 @@ Este paquete sigue **[SemVer](https://semver.org/lang/es/)**. En una librería d
 la API pública es más que los exports de JavaScript. **Cambiar cualquiera de estos elementos es
 un _breaking change_** (versión mayor; menor mientras estemos en `0.x`):
 
-| Elemento de API pública        | Ejemplo                                                            |
-| ------------------------------ | ------------------------------------------------------------------ |
-| Nombres de etiqueta            | `dz-thinking-indicator`                                            |
-| Atributos y propiedades        | `phase`, `label`                                                   |
-| Valores aceptados de atributos | `idle`, `analyzing`, …                                             |
-| Eventos y su `detail`          | `dz-approve` (futuro)                                              |
-| Slots                          | slot por defecto                                                   |
-| CSS parts                      | `indicator`                                                        |
-| CSS custom properties          | `--dz-thinking-color`                                              |
-| Exports y subpaths del paquete | `./define`, `./thinking-orb/define`, `./thinking-indicator/define` |
+| Elemento de API pública        | Ejemplo                                             |
+| ------------------------------ | --------------------------------------------------- |
+| Nombres de etiqueta            | `dz-thinking-indicator`                             |
+| Atributos y propiedades        | `phase`, `label`                                    |
+| Valores aceptados de atributos | `idle`, `analyzing`, …                              |
+| Eventos y su `detail`          | `dz-decision` → `{ decision, reason }`              |
+| Slots                          | slot por defecto                                    |
+| CSS parts                      | `indicator`                                         |
+| CSS custom properties          | `--dz-accent`, `--dz-orb-color`                     |
+| Exports y subpaths del paquete | `./define`, `./markdown/define`, `./react`, `./vue` |
 
 Lo que **no** es API pública: la estructura interna del Shadow DOM fuera de los `part`, los
 archivos dentro de `dist/` que no estén en `exports`, y todo lo que no se re-exporte desde
@@ -399,12 +638,13 @@ archivos dentro de `dist/` que no estén en `exports`, y todo lo que no se re-ex
 
 ### Entradas del paquete
 
-| Import                                           | Efecto secundario | Contenido                               |
-| ------------------------------------------------ | ----------------- | --------------------------------------- |
-| `@diplez/ai-web-primitives`                      | No                | Clases, `define*()`, constantes y tipos |
-| `@diplez/ai-web-primitives/define`               | Sí                | Registra todos los componentes          |
-| `@diplez/ai-web-primitives/<componente>/define`  | Sí                | Registra un componente                  |
-| `@diplez/ai-web-primitives/custom-elements.json` | —                 | Manifiesto de custom elements           |
+| Import                                           | Efecto secundario | Contenido                                                                        |
+| ------------------------------------------------ | ----------------- | -------------------------------------------------------------------------------- |
+| `@diplez/ai-web-primitives`                      | No                | Clases, `defineAll()`, `define*()`, `toStreamEvents()`, `parseMarkdown()`, tipos |
+| `@diplez/ai-web-primitives/define`               | Sí                | Registra todos los componentes                                                   |
+| `@diplez/ai-web-primitives/<componente>/define`  | Sí                | Registra un componente                                                           |
+| `@diplez/ai-web-primitives/react`, `/vue`        | No (solo tipos)   | Tipos de las etiquetas para JSX y plantillas de Vue                              |
+| `@diplez/ai-web-primitives/custom-elements.json` | —                 | Manifiesto de custom elements                                                    |
 
 El paquete es **solo ESM** (estándar en Web Components). Los consumidores CommonJS deben usar
 `import()` dinámico.
@@ -512,6 +752,13 @@ ESLint (`@typescript-eslint/naming-convention`) hace cumplir la parte verificabl
 - Los componentes **no instancian** casos de uso ni adaptadores: los reciben vía
   `static dependencies`.
 - `render()` llama a casos de uso y pinta el DTO; sin reglas de negocio en el template.
+- Si no hay nada que orquestar ni puertos que usar, puede llamar directamente a funciones
+  **puras** del dominio (p. ej. `parseMarkdown`, `sanitizeHref`). Lo que nunca hace es decidir
+  reglas por su cuenta ni hablar con el navegador fuera de su propio DOM (timers, red, portapapeles
+  → puertos).
+- Estilos sobre los tokens de `presentation/theme/theme-tokens.ts` (`--_accent`, `--_text`…), nunca
+  con colores fijos: así el consumidor cambia la marca con `--dz-accent`.
+- Métodos públicos sin chocar con la API del DOM (por eso `appendText()` y no `append()`).
 - Nunca acceder a `window`/`document` a nivel de módulo (rompe SSR).
 
 **composition**
