@@ -1,5 +1,6 @@
 import { THINKING_PHASES } from "../thinking/thinking-phase.js";
 import { ORB_PROFILES, blendOrbProfiles, getOrbProfile, lerpHue } from "./orb-profile.js";
+import { ORB_VARIANTS, toOrbVariant } from "./orb-variant.js";
 
 describe("orb-profile", () => {
   it("define un perfil distinto para cada fase", () => {
@@ -40,5 +41,14 @@ describe("orb-profile", () => {
     const middle = blendOrbProfiles(idle, generating, 0.5);
     expect(middle.energy).toBeGreaterThan(idle.energy);
     expect(middle.energy).toBeLessThan(generating.energy);
+  });
+});
+
+describe("orb-variant", () => {
+  it("normaliza el diseño y ofrece al menos 10", () => {
+    expect(ORB_VARIANTS.length).toBeGreaterThanOrEqual(10);
+    expect(new Set(ORB_VARIANTS).size).toBe(ORB_VARIANTS.length);
+    expect(toOrbVariant("nebula")).toBe("nebula");
+    expect(toOrbVariant("nope")).toBe("sphere");
   });
 });

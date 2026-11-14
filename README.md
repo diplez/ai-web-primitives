@@ -215,9 +215,35 @@ fase tiene una metáfora propia y el orbe se transforma de una a otra de forma c
 | `generating` | Forja       | Superficie turbulenta, núcleo que gira rápido y tokens emitidos en espiral      |
 | `done`       | Calma       | Se asienta en verde                                                             |
 
+**12 diseños** para elegir con el atributo `variant`. Todos expresan las mismas fases con las
+mismas transiciones; cambia la forma de dibujarlas:
+
+| `variant`          | Diseño                                                    |
+| ------------------ | --------------------------------------------------------- |
+| `sphere` (defecto) | Esfera brillante con núcleo que gira                      |
+| `nebula`           | Nube gaseosa de colores con estrellas que titilan         |
+| `atom`             | Núcleo con electrones en órbitas 3D que pasan por detrás  |
+| `wave`             | Anillos que vibran como una forma de onda de audio        |
+| `crystal`          | Gema facetada que gira, con línea de escaneo y destellos  |
+| `lava`             | Lámpara de lava: burbujas que suben dentro de un vidrio   |
+| `gyro`             | Giroscopio de anillos finos alrededor de un punto de luz  |
+| `swarm`            | Enjambre de partículas formando una esfera 3D             |
+| `pixel`            | Matriz de LEDs con escaneo, radar y patrones              |
+| `halo`             | Anillo luminoso con cometas (centro libre para un avatar) |
+| `corona`           | Sol con rayos que laten y barren como un faro             |
+| `enso`             | Círculo zen a pincel que se dibuja mientras piensa        |
+
 ```html
-<dz-thinking-orb phase="generating" show-label style="--dz-orb-size: 64px"></dz-thinking-orb>
+<dz-thinking-orb
+  variant="nebula"
+  phase="generating"
+  show-label
+  style="--dz-orb-size: 64px"
+></dz-thinking-orb>
 ```
+
+El contraste se adapta solo: el orbe detecta si está sobre un fondo claro u oscuro (por el color de
+texto heredado) y ajusta la luminosidad.
 
 Respeta `prefers-reduced-motion` (pose estática), se pausa fuera de pantalla y anuncia el estado
 a lectores de pantalla. Método `refreshColors()` para aplicar colores nuevos sin cambiar de fase.

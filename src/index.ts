@@ -13,6 +13,8 @@ export {
 } from "./composition/thinking-orb/define-thinking-orb.js";
 export type { DefineThinkingOrbOptions } from "./composition/thinking-orb/define-thinking-orb.js";
 export { DzThinkingOrb } from "./presentation/components/thinking-orb/dz-thinking-orb.js";
+export { ORB_VARIANTS } from "./domain/orb/orb-variant.js";
+export type { OrbVariant } from "./domain/orb/orb-variant.js";
 
 // <dz-thinking-indicator>
 export {

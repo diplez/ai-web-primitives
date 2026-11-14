@@ -49,5 +49,17 @@ export function composeOrbFrame(
     accentHue: profile.accentHue,
     saturation: profile.saturation,
     glow: profile.glow,
+    motion: {
+      time,
+      energy: profile.energy,
+      turbulence: profile.turbulence,
+      speed: profile.speed,
+      breath: profile.breath,
+      scan: profile.scan,
+      orbit: profile.orbit,
+      seek: profile.seek,
+      emit: profile.emit,
+      swirl: profile.swirl,
+    },
   };
 }

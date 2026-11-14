@@ -4,6 +4,7 @@ export const ok = (
   <>
     <dz-thinking-orb phase="generating" show-label class="orb" />
     <dz-thinking-orb phase="done" showLabel />
+    <dz-thinking-orb variant="nebula" phase="searching" />
     <dz-markdown content="# Hola" streaming />
     <dz-reasoning steps={["Leer", { title: "Buscar", status: "running" }]} open />
     <dz-approval heading="Borrar" timeout={10} timeout-action="approve" tone="danger" />
@@ -16,3 +17,6 @@ export const badPhase = <dz-thinking-orb phase="dreaming" />;
 
 // @ts-expect-error tono inválido
 export const badTone = <dz-approval tone="loud" />;
+
+// @ts-expect-error diseño inválido
+export const badVariant = <dz-thinking-orb variant="potato" />;

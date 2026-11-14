@@ -23,4 +23,23 @@ export interface OrbFrameDto {
   readonly accentHue: number;
   readonly saturation: number;
   readonly glow: number;
+  /**
+   * Parámetros de movimiento interpolados de la fase y reloj de la animación. Permiten que
+   * cada diseño (`variant`) interprete el mismo estado a su manera, con transiciones suaves.
+   */
+  readonly motion: OrbMotion;
+}
+
+export interface OrbMotion {
+  /** Segundos de animación (0 con movimiento reducido). */
+  readonly time: number;
+  readonly energy: number;
+  readonly turbulence: number;
+  readonly speed: number;
+  readonly breath: number;
+  readonly scan: number;
+  readonly orbit: number;
+  readonly seek: number;
+  readonly emit: number;
+  readonly swirl: number;
 }

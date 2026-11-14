@@ -5,6 +5,8 @@ import type {
   OrbAnimationHandle,
 } from "../../../application/use-cases/orb/animate-thinking-orb.js";
 import type { GetThinkingStatus } from "../../../application/use-cases/thinking/get-thinking-status.js";
+import { toOrbVariant, type OrbVariant } from "../../../domain/orb/orb-variant.js";
+import { parseRgbColor } from "../../../domain/shared/color.js";
 import type { ThinkingPhase } from "../../../domain/thinking/thinking-phase.js";
 import { thinkingOrbStyles } from "./dz-thinking-orb.styles.js";
 import { OrbCanvasRenderer } from "./orb-canvas-renderer.js";
@@ -27,6 +29,10 @@ export interface ThinkingOrbDependencies {
  *
  * Se registra con `defineThinkingOrb()` (capa de composición).
  *
+ * Hay 12 diseños (`variant`): `sphere` (por defecto), `nebula`, `atom`, `wave`, `crystal`,
+ * `lava`, `gyro`, `swarm`, `pixel`, `halo`, `corona` y `enso`. Todos expresan las mismas
+ * fases y transicionan igual; cambia la forma de dibujarlas.
+ *
  * @tag dz-thinking-orb
  * @csspart orb - Contenedor del lienzo del orbe.
  * @csspart label - Texto de estado. Siempre disponible para lectores de pantalla; visible con `show-label`.
@@ -46,6 +52,9 @@ export class DzThinkingOrb extends LitElement {
   /** Fase actual del modelo. Se refleja como atributo para poder estilizarla con CSS. */
   @property({ reflect: true }) phase: ThinkingPhase = "idle";
 
+  /** Diseño visual del orbe. Un valor desconocido usa `sphere`. */
+  @property({ reflect: true }) variant: OrbVariant = "sphere";
+
   /** Texto de estado personalizado. Por defecto se deriva de `phase`. */
   @property() label?: string;
 
@@ -64,6 +73,7 @@ export class DzThinkingOrb extends LitElement {
    * `--dz-orb-color` o el tema sin cambiar de fase (los cambios de fase ya los leen solos).
    */
   refreshColors(): void {
+    this.renderer?.setSurface(this.surface());
     this.animation?.setPhase(this.phase, this.palette());
   }
 
@@ -83,7 +93,9 @@ export class DzThinkingOrb extends LitElement {
   }
 
   protected override updated(changed: PropertyValues<this>): void {
+    if (changed.has("variant")) this.renderer?.setVariant(toOrbVariant(this.variant));
     if (changed.has("phase") && changed.get("phase") !== undefined) {
+      this.renderer?.setSurface(this.surface());
       this.animation?.setPhase(this.phase, this.palette());
     }
   }
@@ -112,6 +124,8 @@ export class DzThinkingOrb extends LitElement {
     const canvas = this.canvas;
 
     this.renderer = new OrbCanvasRenderer(canvas);
+    this.renderer.setVariant(toOrbVariant(this.variant));
+    this.renderer.setSurface(this.surface());
     const measure = (): void => {
       const { width, height } = canvas.getBoundingClientRect();
       this.renderer?.resize(width, height, globalThis.devicePixelRatio || 1);
@@ -135,6 +149,17 @@ export class DzThinkingOrb extends LitElement {
       });
       this.intersectionObserver.observe(this);
     }
+  }
+
+  /**
+   * Superficie detrás del orbe, deducida del color de texto heredado: texto claro implica
+   * fondo oscuro. Funciona con cualquier tema sin configuración.
+   */
+  private surface(): "light" | "dark" {
+    const rgb = parseRgbColor(getComputedStyle(this).color);
+    if (!rgb) return "dark";
+    const luminance = (0.2126 * rgb.r + 0.7152 * rgb.g + 0.0722 * rgb.b) / 255;
+    return luminance > 0.5 ? "dark" : "light";
   }
 
   private palette() {
