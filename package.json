@@ -1,6 +1,6 @@
 {
   "name": "@diplez/ai-web-primitives",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Web Components agnósticos de framework para interfaces de IA: razonamiento, UI generativa, human-in-the-loop y voz. Funcionan en React, Vue, Angular, Svelte o HTML plano.",
   "keywords": [
     "web-components",
