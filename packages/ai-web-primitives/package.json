@@ -105,7 +105,7 @@
     "check:framework-types": "tsc -p test-types/tsconfig.json",
     "validate": "npm run lint && npm run typecheck && npm test && npm run build && npm run check:exports && npm run check:side-effects && npm run check:framework-types",
     "prepublishOnly": "npm run validate",
-    "media": "node scripts/media/record.mjs"
+    "media": "node ../../scripts/record-media.mjs"
   },
   "dependencies": {
     "lit": "^3.3.3"
@@ -117,10 +117,7 @@
     "@types/react": "^19.3.0",
     "dependency-cruiser": "^18.7.2",
     "esbuild": "^0.28.2",
-    "gifenc": "^1.0.3",
     "jsdom": "^29.1.1",
-    "pngjs": "^7.0.0",
-    "puppeteer-core": "^23.11.1",
     "tsup": "^9.0.0",
     "vitest": "^5.1.0",
     "vue": "^3.5.45"

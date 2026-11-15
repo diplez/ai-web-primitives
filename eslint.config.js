@@ -66,7 +66,7 @@ export default tseslint.config(
 
   // GIFs del README: las escenas y los callbacks de page.evaluate() corren en el navegador.
   {
-    files: ["packages/*/scripts/media/*.mjs"],
+    files: ["packages/*/scripts/media/*.mjs", "scripts/record-media.mjs"],
     languageOptions: { globals: { ...globals.node, ...globals.browser } },
   },
 

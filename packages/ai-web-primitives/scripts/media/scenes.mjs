@@ -1,12 +1,13 @@
 // Escenas que graba `npm run media` para los GIFs del README (código de navegador).
 // Cada escena monta componentes en #stage y expone window.runScene(), que la anima y resuelve al
-// terminar. Los marcadores window.__clickApprove y window.__hover piden al grabador que mueva el mouse.
+// terminar. act() le pide al grabador que mueva el mouse de verdad (ver scripts/record-media.mjs).
 import { defineAll } from "../../dist/index.js";
 
 defineAll({ locale: "es" });
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const stage = document.querySelector("#stage");
+const act = (action) => (window.__actions ??= []).push(action);
 
 async function* typeOut(text, chunk = 4, delay = 28) {
   for (let i = 0; i < text.length; i += chunk) {
@@ -119,7 +120,7 @@ do {
     },
     async run() {
       await wait(3600);
-      window.__clickApprove = true; // el grabador hace clic real en "Aprobar"
+      act({ type: "click", selector: "#card >>> button.approve" });
       await wait(2400);
     },
   },
@@ -139,13 +140,13 @@ do {
     },
     async run() {
       await wait(1000);
-      window.__hover = 0; // el grabador mueve el mouse sobre la cita 1
+      act({ type: "hover", selector: 'dz-citation[index="1"]' });
       await wait(2600);
-      window.__hover = -1;
+      act({ type: "leave" });
       await wait(700);
-      window.__hover = 1;
+      act({ type: "hover", selector: 'dz-citation[index="2"]' });
       await wait(2600);
-      window.__hover = -1;
+      act({ type: "leave" });
       await wait(900);
     },
   },

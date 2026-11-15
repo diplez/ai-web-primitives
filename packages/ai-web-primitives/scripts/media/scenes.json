@@ -1,0 +1,20 @@
+{
+  "outDir": "docs/media",
+  "scenes": {
+    "orbs": {
+      "fps": 12
+    },
+    "markdown": {
+      "fps": 20
+    },
+    "reasoning": {
+      "fps": 20
+    },
+    "approval": {
+      "fps": 20
+    },
+    "citation": {
+      "fps": 20
+    }
+  }
+}
