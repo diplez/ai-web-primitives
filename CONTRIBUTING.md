@@ -1,9 +1,11 @@
-# Contribuir a @diplez/ai-web-primitives
+# Contribuir
 
-Guía para desarrollar en este repositorio. La documentación de uso de los componentes está en el [README](README.md).
+Guía para desarrollar en este repositorio. La documentación de uso de cada paquete está en su
+propio README (por ejemplo, [`packages/ai-web-primitives`](packages/ai-web-primitives/README.md)).
 
 ## Tabla de contenidos
 
+- [Monorepo](#monorepo)
 - [Concepto de arquitectura](#concepto-de-arquitectura)
 - [Cómo se hace cumplir la arquitectura](#cómo-se-hace-cumplir-la-arquitectura)
 - [Estructura del proyecto](#estructura-del-proyecto)
@@ -17,7 +19,34 @@ Guía para desarrollar en este repositorio. La documentación de uso de los comp
 - [Estándares de componentes](#estándares-de-componentes)
 - [Tests](#tests)
 - [Cómo agregar un nuevo componente](#cómo-agregar-un-nuevo-componente)
+- [Cómo agregar un paquete nuevo](#cómo-agregar-un-paquete-nuevo)
 - [Convención de commits](#convención-de-commits)
+- [Publicación en npm](#publicación-en-npm)
+
+---
+
+## Monorepo
+
+El repositorio es un monorepo con **npm workspaces**. Cada carpeta de `packages/` es un paquete
+npm independiente (nombre, versión, README y publicación propios) bajo el scope `@diplez`. Lo
+común vive en la raíz:
+
+| En la raíz                             | Compartido por todos los paquetes                                |
+| -------------------------------------- | ---------------------------------------------------------------- |
+| `package.json`                         | Workspaces y herramientas comunes (ESLint, Prettier, TypeScript) |
+| `tsconfig.base.json`                   | Opciones de TypeScript que cada paquete extiende                 |
+| `eslint.config.js`, `.prettierrc.json` | Lint y formato                                                   |
+| `scripts/validate-commit-msg.mjs`      | Hook de commits (los hooks de git son del repositorio)           |
+| `.github/workflows/ci.yml`             | CI de todos los paquetes                                         |
+| `docs/`                                | Roadmap e imágenes de los README (`docs/media/`)                 |
+
+Las dependencias propias de cada paquete (build, tests, runtime) van en su `package.json`. Un
+paquete puede depender de otro del monorepo declarándolo en `dependencies` con su versión;
+npm lo enlaza localmente.
+
+Las secciones de arquitectura, estándares y componentes de esta guía describen
+`packages/ai-web-primitives`: las rutas como `src/domain/` son relativas a esa carpeta. Los
+paquetes nuevos siguen la misma arquitectura.
 
 ---
 
@@ -122,11 +151,24 @@ Hooks de git (instalados automáticamente con `npm install` vía `simple-git-hoo
 
 ## Estructura del proyecto
 
-Cada capa se organiza por funcionalidad (`thinking`, `orb`, `markdown`, `stream`, `reasoning`,
-`approval`, `citation`). Cada archivo tiene su `*.test.ts` al lado.
+```
+ai-web-primitives/                        # Raíz del monorepo
+├── packages/
+│   └── ai-web-primitives/                # @diplez/ai-web-primitives
+├── scripts/validate-commit-msg.mjs       # Hook commit-msg
+├── docs/
+│   ├── ideas-libreria-componentes-ia.md  # Roadmap de componentes
+│   └── media/                            # GIFs de los README (enlazados por URL de GitHub)
+├── .github/workflows/ci.yml              # CI: lo mismo que npm run validate
+├── eslint.config.js / .prettierrc.json
+└── tsconfig.base.json
+```
+
+Dentro de cada paquete, cada capa se organiza por funcionalidad (`thinking`, `orb`, `markdown`,
+`stream`, `reasoning`, `approval`, `citation`). Cada archivo tiene su `*.test.ts` al lado.
 
 ```
-ai-web-primitives/
+packages/ai-web-primitives/
 ├── src/
 │   ├── index.ts                          # API pública SIN efectos secundarios
 │   ├── define.ts                         # Registra todos los componentes (defineAll)
@@ -176,16 +218,13 @@ ai-web-primitives/
 │           └── define.ts                 # Entry con efecto: registra con valores por defecto
 │
 ├── scripts/
-│   ├── validate-commit-msg.mjs           # Hook commit-msg
 │   ├── check-exports.mjs                 # attw sin heredar --dry-run
 │   ├── check-side-effects.mjs            # Verifica que cada */define registre con bundlers
-│   └── generate-framework-types.mjs      # Tipos React/Vue desde custom-elements.json
+│   ├── generate-framework-types.mjs      # Tipos React/Vue desde custom-elements.json
+│   └── media/                            # Escenas y grabador de los GIFs del README
 ├── test-types/                           # Verifica que los tipos React/Vue compilen y detecten errores
-├── docs/ideas-libreria-componentes-ia.md # Roadmap de componentes
-├── .github/workflows/ci.yml              # CI: lo mismo que npm run validate
 ├── .dependency-cruiser.cjs               # Reglas de capas
-├── eslint.config.js
-├── tsconfig.json / tsconfig.core.json    # General / pureza de domain + application
+├── tsconfig.json / tsconfig.core.json    # General (extiende la base) / pureza de domain + application
 ├── tsup.config.ts                        # Build ESM + .d.ts
 ├── vitest.config.ts / vitest.setup.ts    # Tests (jsdom)
 └── custom-elements-manifest.config.mjs   # Genera custom-elements.json
@@ -239,7 +278,7 @@ ThinkingStatusDto { phase, busy, label }
 ```bash
 git clone https://github.com/diplez/ai-web-primitives.git
 cd ai-web-primitives
-npm install          # instala dependencias y los hooks de git
+npm install          # instala todos los paquetes, los enlaza entre sí y activa los hooks de git
 npm run validate     # verifica que todo esté en verde
 ```
 
@@ -251,22 +290,34 @@ de npm para publicar, que **nunca** se guarda en el repositorio (ver
 
 ## Scripts disponibles
 
-| Script                          | Qué hace                                                                                                                             |
-| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `npm run dev`                   | Build en modo watch                                                                                                                  |
-| `npm run build`                 | Genera `dist/` (ESM + `.d.ts`), `custom-elements.json` y los tipos React/Vue                                                         |
-| `npm test`                      | Corre los tests una vez                                                                                                              |
-| `npm run test:watch`            | Tests en modo watch                                                                                                                  |
-| `npm run typecheck`             | Chequeo de tipos general + pureza del núcleo                                                                                         |
-| `npm run lint`                  | ESLint + reglas de arquitectura                                                                                                      |
-| `npm run lint:arch`             | Solo reglas de arquitectura (dependency-cruiser)                                                                                     |
-| `npm run lint:fix`              | ESLint con autofix                                                                                                                   |
-| `npm run format`                | Formatea todo con Prettier                                                                                                           |
-| `npm run check:exports`         | Verifica que los exports y tipos del paquete resuelvan bien                                                                          |
-| `npm run check:side-effects`    | Bundlea cada `*/define` como una app y verifica que registre sus componentes                                                         |
-| `npm run check:framework-types` | Compila `test-types/` contra los tipos React/Vue publicados                                                                          |
-| `npm run validate`              | Todo lo anterior, en el mismo orden que CI                                                                                           |
-| `npm run media`                 | Graba los GIFs del README en `docs/media/` (requiere `npm run build` y Edge o Chrome; `npm run media -- orbs` graba solo una escena) |
+**Desde la raíz** (corren en todos los paquetes):
+
+| Script              | Qué hace                                                        |
+| ------------------- | --------------------------------------------------------------- |
+| `npm run build`     | Build de todos los paquetes                                     |
+| `npm test`          | Tests de todos los paquetes                                     |
+| `npm run typecheck` | Chequeo de tipos de todos los paquetes                          |
+| `npm run lint`      | ESLint de todo el repo + reglas de arquitectura de cada paquete |
+| `npm run format`    | Formatea todo con Prettier (`format:check` solo verifica)       |
+| `npm run validate`  | Formato + la validación completa de cada paquete, igual que CI  |
+
+Para un solo paquete se agrega `-w <paquete>` (por ejemplo `npm test -w @diplez/ai-web-primitives`)
+o se ejecuta el script dentro de su carpeta.
+
+**Dentro de `packages/ai-web-primitives`:**
+
+| Script                            | Qué hace                                                                                                                             |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `npm run dev`                     | Build en modo watch                                                                                                                  |
+| `npm run build`                   | Genera `dist/` (ESM + `.d.ts`), `custom-elements.json` y los tipos React/Vue                                                         |
+| `npm test` / `npm run test:watch` | Tests una vez / en modo watch                                                                                                        |
+| `npm run typecheck`               | Chequeo de tipos general + pureza del núcleo                                                                                         |
+| `npm run lint`                    | ESLint + reglas de arquitectura (`lint:arch`: solo dependency-cruiser)                                                               |
+| `npm run check:exports`           | Verifica que los exports y tipos del paquete resuelvan bien                                                                          |
+| `npm run check:side-effects`      | Bundlea cada `*/define` como una app y verifica que registre sus componentes                                                         |
+| `npm run check:framework-types`   | Compila `test-types/` contra los tipos React/Vue publicados                                                                          |
+| `npm run validate`                | Todo lo anterior (también se ejecuta solo antes de publicar)                                                                         |
+| `npm run media`                   | Graba los GIFs del README en `docs/media/` (requiere `npm run build` y Edge o Chrome; `npm run media -- orbs` graba solo una escena) |
 
 ---
 
@@ -555,13 +606,31 @@ defineApprovalCard();
 - Llamar `defineApprovalCard()` en `src/define.ts` (una llamada explícita, **nunca** `import "./composition/approval-card/define.js"`: los bundlers descartarían ese import y el componente no se registraría).
 - Agregar en `package.json → exports`:
   `"./approval-card/define": { "types": "./dist/composition/approval-card/define.d.ts", "default": "./dist/composition/approval-card/define.js" }`.
-- Agregar el componente a la tabla de [componentes disponibles](README.md#componentes).
+- Agregar el componente a la tabla de [componentes disponibles](packages/ai-web-primitives/README.md#componentes).
 
 ### 7. Validar
 
 ```bash
 npm run validate
 ```
+
+---
+
+## Cómo agregar un paquete nuevo
+
+1. Crear `packages/<nombre>/` con su `package.json`: `"name": "@diplez/<nombre>"`,
+   `"version": "0.1.0"`, `"type": "module"`, `exports`, `files`, `publishConfig.access: "public"`
+   y `"repository": { …, "directory": "packages/<nombre>" }`. Tomar como modelo
+   `packages/ai-web-primitives/package.json`.
+2. Agregar un `tsconfig.json` que extienda `../../tsconfig.base.json`, más la configuración de
+   build y tests que necesite (`tsup.config.ts`, `vitest.config.ts`, `.dependency-cruiser.cjs`).
+3. Definir los scripts `build`, `test`, `typecheck`, `lint` y `validate` (los de la raíz los
+   ejecutan en cada paquete) y `prepublishOnly: "npm run validate"`.
+4. Escribir su `README.md` (uso, no arquitectura) y copiar `LICENSE`.
+5. Si usa otro paquete del monorepo, declararlo en `dependencies` (por ejemplo
+   `"@diplez/ai-web-primitives": "^0.1.2"`).
+6. Ejecutar `npm install` en la raíz (enlaza el paquete) y `npm run validate`.
+7. Agregarlo a la tabla de paquetes del README de la raíz.
 
 ---
 
@@ -627,11 +696,15 @@ CAMBIOS:
 
 ## Publicación en npm
 
+Cada paquete se publica por separado, con su propia versión.
+
 1. Iniciar sesión con la cuenta dueña del scope `@diplez`: `npm login`.
-2. Actualizar la versión según SemVer: `npm version patch|minor|major` (crea el tag de git).
-3. Publicar: `npm publish` — `prepublishOnly` corre `npm run validate` y aborta si algo falla.
-   `publishConfig.access = "public"` ya está configurado (necesario para paquetes con scope).
-4. Subir el tag: `git push --follow-tags`.
+2. Actualizar la versión del paquete según SemVer en su `package.json` y hacer el commit
+   `chore(release): <paquete> <versión>`.
+3. Publicar desde la raíz: `npm publish -w @diplez/<paquete> --otp=<código>`. `prepublishOnly`
+   corre la validación del paquete y aborta si algo falla.
+4. Crear el tag `<paquete>@<versión>` (por ejemplo `ai-web-primitives@0.1.3`) y subirlo con
+   `git push origin main --tags`.
 
 Para publicar desde CI, usar un **token de automatización** de npm guardado como secreto del
 repositorio (`NPM_TOKEN`), nunca en archivos del proyecto.

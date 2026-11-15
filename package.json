@@ -1,144 +1,41 @@
 {
-  "name": "@diplez/ai-web-primitives",
-  "version": "0.1.2",
-  "description": "Web Components agnósticos de framework para interfaces de IA: razonamiento, UI generativa, human-in-the-loop y voz. Funcionan en React, Vue, Angular, Svelte o HTML plano.",
-  "keywords": [
-    "web-components",
-    "custom-elements",
-    "lit",
-    "ai",
-    "llm",
-    "generative-ui",
-    "streaming",
-    "human-in-the-loop",
-    "react",
-    "vue",
-    "angular",
-    "svelte"
-  ],
+  "name": "ai-web-primitives-monorepo",
+  "private": true,
+  "description": "Monorepo de los paquetes de componentes de diplez para interfaces de IA.",
   "author": "diplez",
   "license": "MIT",
-  "homepage": "https://github.com/diplez/ai-web-primitives#readme",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/diplez/ai-web-primitives.git"
-  },
-  "bugs": {
-    "url": "https://github.com/diplez/ai-web-primitives/issues"
-  },
   "type": "module",
-  "sideEffects": [
-    "./dist/define.js",
-    "./dist/composition/*/define.js"
-  ],
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    },
-    "./define": {
-      "types": "./dist/define.d.ts",
-      "default": "./dist/define.js"
-    },
-    "./thinking-orb/define": {
-      "types": "./dist/composition/thinking-orb/define.d.ts",
-      "default": "./dist/composition/thinking-orb/define.js"
-    },
-    "./thinking-indicator/define": {
-      "types": "./dist/composition/thinking-indicator/define.d.ts",
-      "default": "./dist/composition/thinking-indicator/define.js"
-    },
-    "./markdown/define": {
-      "types": "./dist/composition/markdown/define.d.ts",
-      "default": "./dist/composition/markdown/define.js"
-    },
-    "./reasoning/define": {
-      "types": "./dist/composition/reasoning/define.d.ts",
-      "default": "./dist/composition/reasoning/define.js"
-    },
-    "./approval/define": {
-      "types": "./dist/composition/approval/define.d.ts",
-      "default": "./dist/composition/approval/define.js"
-    },
-    "./citation/define": {
-      "types": "./dist/composition/citation/define.d.ts",
-      "default": "./dist/composition/citation/define.js"
-    },
-    "./react": {
-      "types": "./dist/frameworks/react.d.ts",
-      "default": "./dist/frameworks/react.js"
-    },
-    "./vue": {
-      "types": "./dist/frameworks/vue.d.ts",
-      "default": "./dist/frameworks/vue.js"
-    },
-    "./custom-elements.json": "./custom-elements.json",
-    "./package.json": "./package.json"
-  },
-  "customElements": "custom-elements.json",
-  "files": [
-    "dist",
-    "!dist/**/*.map",
-    "custom-elements.json",
-    "README.md",
-    "LICENSE"
+  "workspaces": [
+    "packages/*"
   ],
   "engines": {
     "node": ">=18"
   },
-  "publishConfig": {
-    "access": "public"
-  },
   "scripts": {
-    "dev": "tsup --watch",
-    "build": "tsup && npm run analyze && node scripts/generate-framework-types.mjs",
-    "analyze": "cem analyze",
-    "typecheck": "tsc --noEmit && tsc -p tsconfig.core.json",
-    "lint": "eslint . && npm run lint:arch",
-    "lint:arch": "depcruise src",
+    "build": "npm run build --workspaces",
+    "test": "npm test --workspaces",
+    "typecheck": "npm run typecheck --workspaces",
+    "lint": "eslint . && npm run lint:arch --workspaces --if-present",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "check:exports": "node scripts/check-exports.mjs",
-    "validate": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run build && npm run check:exports && npm run check:side-effects && npm run check:framework-types",
-    "prepublishOnly": "npm run validate",
-    "prepare": "simple-git-hooks",
-    "check:side-effects": "node scripts/check-side-effects.mjs",
-    "check:framework-types": "tsc -p test-types/tsconfig.json",
-    "media": "node scripts/media/record.mjs"
+    "validate": "npm run format:check && npm run validate --workspaces",
+    "prepare": "simple-git-hooks"
   },
   "simple-git-hooks": {
     "commit-msg": "node scripts/validate-commit-msg.mjs $1",
     "pre-commit": "npm run lint && npm run typecheck"
   },
-  "dependencies": {
-    "lit": "^3.3.3"
-  },
   "devDependencies": {
-    "@arethetypeswrong/cli": "^0.18.5",
-    "@custom-elements-manifest/analyzer": "^0.11.0",
     "@eslint/js": "^10.0.1",
-    "@testing-library/jest-dom": "^7.0.1",
-    "@types/react": "^19.3.0",
-    "dependency-cruiser": "^18.7.2",
-    "esbuild": "^0.28.2",
     "eslint": "^10.14.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-lit": "^2.3.1",
     "eslint-plugin-wc": "^3.1.0",
-    "gifenc": "^1.0.3",
     "globals": "^17.14.0",
-    "jsdom": "^29.1.1",
-    "pngjs": "^7.0.0",
     "prettier": "^3.10.1",
-    "puppeteer-core": "^23.11.1",
     "simple-git-hooks": "^2.14.0",
-    "tsup": "^9.0.0",
     "typescript": "~5.9",
-    "typescript-eslint": "^8.72.2",
-    "vitest": "^5.1.0",
-    "vue": "^3.5.45"
+    "typescript-eslint": "^8.72.2"
   }
 }

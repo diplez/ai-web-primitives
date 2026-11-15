@@ -20,5 +20,6 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
-      - run: npm run check:exports
-      - run: npm run check:side-effects
+      - run: npm run check:exports --workspaces --if-present
+      - run: npm run check:side-effects --workspaces --if-present
+      - run: npm run check:framework-types --workspaces --if-present

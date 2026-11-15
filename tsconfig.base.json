@@ -1,4 +1,6 @@
 {
+  // Opciones comunes a todos los paquetes del monorepo. Cada paquete extiende este archivo
+  // y agrega sus propios "include" y "types".
   "compilerOptions": {
     "target": "ES2021",
     "lib": ["DOM", "DOM.Iterable", "ES2021"],
@@ -15,8 +17,6 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "experimentalDecorators": true,
-    "useDefineForClassFields": false,
-    "types": ["vitest/globals"]
-  },
-  "include": ["src", "*.ts"]
+    "useDefineForClassFields": false
+  }
 }

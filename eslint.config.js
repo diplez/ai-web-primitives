@@ -6,7 +6,7 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["dist/", "coverage/", "node_modules/", "custom-elements.json"] },
+  { ignores: ["**/dist/", "**/coverage/", "**/node_modules/", "**/custom-elements.json"] },
 
   js.configs.recommended,
   ...tseslint.configs.recommended,
@@ -38,7 +38,7 @@ export default tseslint.config(
 
   // Componentes Lit (capa de presentación).
   {
-    files: ["src/presentation/**/*.ts"],
+    files: ["packages/*/src/presentation/**/*.ts"],
     plugins: { lit, wc },
     rules: {
       ...lit.configs.recommended.rules,
@@ -59,14 +59,14 @@ export default tseslint.config(
 
   // Scripts de Node.
   {
-    files: ["scripts/**/*.mjs", "*.config.{js,mjs,cjs}", ".dependency-cruiser.cjs"],
+    files: ["**/scripts/**/*.mjs", "**/*.config.{js,mjs,cjs}", "**/.dependency-cruiser.cjs"],
     languageOptions: { globals: globals.node },
     rules: { "no-console": "off", "@typescript-eslint/no-require-imports": "off" },
   },
 
   // GIFs del README: las escenas y los callbacks de page.evaluate() corren en el navegador.
   {
-    files: ["scripts/media/*.mjs"],
+    files: ["packages/*/scripts/media/*.mjs"],
     languageOptions: { globals: { ...globals.node, ...globals.browser } },
   },
 

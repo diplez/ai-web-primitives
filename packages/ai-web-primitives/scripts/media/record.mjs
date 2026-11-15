@@ -25,7 +25,7 @@ const SCENES = { orbs: 12, markdown: 20, reasoning: 20, approval: 20, citation: 
 const FINAL_HOLD_MS = 2500;
 
 const here = fileURLToPath(new URL(".", import.meta.url));
-const outDir = fileURLToPath(new URL("../../docs/media/", import.meta.url));
+const outDir = fileURLToPath(new URL("../../../../docs/media/", import.meta.url));
 
 const requested = process.argv.slice(2);
 const unknown = requested.filter((name) => !(name in SCENES));
