@@ -53,8 +53,8 @@ describe("DescribeToolCall", () => {
 
   it("expone los títulos de sección traducidos", () => {
     expect(describeToolCall.execute({ ...base, status: "error", error: "x" }).labels).toEqual({
-      arguments: "Argumentos",
-      result: "Resultado",
+      arguments: "Entrada",
+      result: "Salida",
       error: "Error",
     });
   });

@@ -518,7 +518,7 @@ export class DzAgentTimeline extends LitElement {
               part="fork-button"
               @click=${(event: Event) => this.onFork(event, item)}
             >
-              ⑂ ${forkLabel}
+              ↻ ${forkLabel}
             </button>`
           : nothing
       }

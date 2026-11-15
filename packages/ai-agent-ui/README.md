@@ -1,293 +1,338 @@
 # @diplez/ai-agent-ui
 
-Componentes para **supervisar agentes de IA** mientras trabajan: cada llamada a herramienta en
-vivo y una línea de tiempo que se **rebobina** y se **bifurca**. Son **Web Components**:
-funcionan igual en React, Vue, Angular, Svelte o HTML plano.
+**Muestra a tus usuarios qué está haciendo tu agente de IA.** Dos componentes listos para usar:
 
-> Estado: desarrollo temprano (`0.x`). La API pública puede cambiar entre versiones menores hasta
-> la `1.0.0`.
+- **`<dz-tool-call>`**: cada vez que el agente usa una herramienta (buscar, leer un archivo,
+  correr tests…), muestra qué le pidió, si sigue trabajando y qué obtuvo.
+- **`<dz-agent-timeline>`**: el historial de todo lo que hizo el agente. Se puede volver a
+  cualquier paso, reproducirlo como un video y reintentar desde ahí.
 
-| Componente            | Para qué sirve                                                                           |
-| --------------------- | ---------------------------------------------------------------------------------------- |
-| `<dz-tool-call>`      | Una llamada a herramienta en vivo: argumentos en streaming, ejecución, resultado o error |
-| `<dz-agent-timeline>` | La "caja negra" del agente: todo lo que hizo, para rebobinar, repetir y bifurcar         |
+Funcionan en **React, Vue, Angular, Svelte o HTML plano** (son Web Components).
 
-Combina con [`@diplez/ai-web-primitives`](https://www.npmjs.com/package/@diplez/ai-web-primitives)
-(markdown en streaming, razonamiento, aprobaciones, orbes): usan las mismas variables de tema.
+<p align="center"><img src="https://raw.githubusercontent.com/diplez/ai-web-primitives/main/docs/media/agent-ui/agent-timeline.gif" alt="dz-agent-timeline recibiendo eventos en vivo, volviendo a un paso anterior y reintentando desde ahí" width="640"></p>
+
+> Versión temprana (`0.x`): la API puede cambiar antes de la `1.0.0`.
 
 ---
 
-## Tabla de contenidos
+## Contenido
 
-- [Empezar en 1 minuto](#empezar-en-1-minuto)
-- [Componentes](#componentes)
-- [Colores y tema](#colores-y-tema)
-- [Idiomas](#idiomas)
-- [Uso con frameworks](#uso-con-frameworks)
-- [Entradas del paquete](#entradas-del-paquete)
-- [Compatibilidad](#compatibilidad)
-- [Licencia](#licencia)
+- [Instalar y usar](#instalar-y-usar)
+- [`<dz-tool-call>`: una herramienta en uso](#dz-tool-call-una-herramienta-en-uso)
+- [`<dz-agent-timeline>`: el historial del agente](#dz-agent-timeline-el-historial-del-agente)
+- [Cambiar colores](#cambiar-colores)
+- [Idioma de los textos](#idioma-de-los-textos)
+- [Usar con React, Vue o Angular](#usar-con-react-vue-o-angular)
+- [Requisitos](#requisitos)
+- [Detalles técnicos](#detalles-técnicos)
 
 ---
 
-## Empezar en 1 minuto
+## Instalar y usar
+
+**1. Instalar**
 
 ```bash
 npm install @diplez/ai-agent-ui
 ```
 
+**2. Registrar los componentes** (una sola vez, al iniciar tu app)
+
 ```js
-import { defineAll } from "@diplez/ai-agent-ui";
-defineAll({ locale: "es" }); // registra todos los componentes, con textos en español
+import "@diplez/ai-agent-ui/define";
 ```
+
+**3. Usarlos como cualquier etiqueta HTML**
 
 ```html
-<dz-agent-timeline id="historial" forkable></dz-agent-timeline>
-<dz-tool-call id="busqueda" name="search_docs"></dz-tool-call>
+<dz-tool-call name="search_docs" status="running" args='{"query": "pagination"}'></dz-tool-call>
 
-<script type="module">
-  const herramienta = document.querySelector("#busqueda");
-  herramienta.appendArgs('{"query": "paginación"}'); // los argumentos pueden llegar a pedazos
-  herramienta.run();
-  herramienta.complete({ total: 2 });
-
-  document.querySelector("#historial").addEvent({ kind: "tool", title: "search_docs" });
-</script>
+<dz-agent-timeline events='["Read the request", "Searched the docs", "Wrote the answer"]'>
+</dz-agent-timeline>
 ```
 
-Otras formas de registrar:
-
-```js
-import "@diplez/ai-agent-ui/define"; // todo, en inglés
-import "@diplez/ai-agent-ui/tool-call/define"; // solo un componente (mejor tree-shaking)
-import { defineToolCall } from "@diplez/ai-agent-ui";
-defineToolCall({ tagName: "mi-herramienta", locale: "es" });
-```
-
-> El import raíz (`@diplez/ai-agent-ui`) **no registra nada** por sí solo: registrar es siempre
-> explícito, con `defineAll()`, un `define*()` o un import `…/define`.
-
-**Sin bundler** (HTML plano, prototipos):
+¿Sin bundler? Cárgalo directo desde un CDN:
 
 ```html
 <script type="module">
   import { defineAll } from "https://cdn.jsdelivr.net/npm/@diplez/ai-agent-ui/+esm";
-  defineAll({ locale: "es" });
+  defineAll();
 </script>
 ```
 
 ---
 
-## Componentes
+## `<dz-tool-call>`: una herramienta en uso
 
-### `<dz-tool-call>`: llamada a herramienta en vivo
+<p align="center"><img src="https://raw.githubusercontent.com/diplez/ai-web-primitives/main/docs/media/agent-ui/tool-call.gif" alt="dz-tool-call mostrando la entrada en vivo, la ejecución, la salida y un error" width="640"></p>
 
-<p align="center"><img src="https://raw.githubusercontent.com/diplez/ai-web-primitives/main/docs/media/agent-ui/tool-call.gif" alt="dz-tool-call mostrando los argumentos en streaming, la ejecución, el resultado y un error" width="640"></p>
+Una tarjeta que acompaña a la herramienta de principio a fin:
 
-Muestra una llamada del modelo a una herramienta (function calling) durante todo su ciclo:
+| Estado    | Qué ve el usuario                                                |
+| --------- | ---------------------------------------------------------------- |
+| `pending` | El agente está escribiendo lo que le va a pedir a la herramienta |
+| `running` | La herramienta está trabajando, con un cronómetro                |
+| `success` | Terminó: cuánto tardó y qué devolvió                             |
+| `error`   | Falló: el mensaje de error, en rojo                              |
 
-| Estado (`status`) | Qué se ve                                                   |
-| ----------------- | ----------------------------------------------------------- |
-| `pending`         | El modelo está escribiendo los argumentos: aparecen en vivo |
-| `running`         | La herramienta se ejecuta: indicador giratorio y cronómetro |
-| `success`         | Terminó: duración y resultado (JSON resaltado o texto)      |
-| `error`           | Falló: el mensaje de error en rojo                          |
+La cabecera resume la llamada en una línea (`query: "pagination"`); al hacer clic se abre el
+detalle con la **entrada** (lo que se pidió) y la **salida** (lo que devolvió).
 
-Los argumentos aceptan **JSON incompleto**: se muestran formateados desde el primer carácter,
-cerrando strings y llaves que todavía no llegaron. La cabecera resume el primer valor
-(`query: "paginación"`) para entender la llamada sin abrirla.
+### Ejemplo básico
 
 ```js
-const herramienta = document.querySelector("dz-tool-call");
+const tool = document.querySelector("dz-tool-call");
 
+tool.name = "search_docs";
+tool.args = { query: "pagination" }; // lo que se le pide a la herramienta
+tool.run(); // empieza a trabajar → "Running" + cronómetro
+
+tool.complete({ total: 2 }); // terminó bien → muestra la salida
+// o, si algo salió mal:
+tool.fail("Timeout after 30 s");
+```
+
+### Mientras el modelo escribe
+
+Los modelos envían la entrada de la herramienta **en pedazos**. Pásaselos tal cual llegan con
+`appendArgs()`: el componente los muestra ordenados desde el primer carácter, aunque todavía
+estén incompletos.
+
+<details>
+<summary>Ejemplo con OpenAI y con Anthropic</summary>
+
+```js
 // OpenAI (Chat Completions con stream: true)
 for await (const chunk of stream) {
-  const delta = chunk.choices[0]?.delta?.tool_calls?.[0];
-  if (delta?.function?.name) herramienta.name = delta.function.name;
-  if (delta?.function?.arguments) herramienta.appendArgs(delta.function.arguments);
+  const call = chunk.choices[0]?.delta?.tool_calls?.[0];
+  if (call?.function?.name) tool.name = call.function.name;
+  if (call?.function?.arguments) tool.appendArgs(call.function.arguments);
 }
 
 // Anthropic (Messages con stream: true)
 for await (const event of stream) {
   if (event.type === "content_block_start" && event.content_block.type === "tool_use") {
-    herramienta.name = event.content_block.name;
+    tool.name = event.content_block.name;
   }
   if (event.type === "content_block_delta" && event.delta.type === "input_json_delta") {
-    herramienta.appendArgs(event.delta.partial_json);
+    tool.appendArgs(event.delta.partial_json);
   }
-}
-
-herramienta.run(); // empieza a ejecutarse
-try {
-  herramienta.complete(await ejecutar(herramienta.args)); // resultado: objeto o texto
-} catch (error) {
-  herramienta.fail(error.message);
 }
 ```
 
-| Atributo / propiedad | Valores                                      | Descripción                                        |
-| -------------------- | -------------------------------------------- | -------------------------------------------------- |
-| `name`               | texto                                        | Nombre de la herramienta                           |
-| `status`             | `pending` · `running` · `success` · `error`  | Estado (reflejado, para estilizar)                 |
-| `args`               | texto JSON (puede estar incompleto) u objeto | Argumentos                                         |
-| `result`             | objeto o texto (propiedad)                   | Resultado; si el texto es JSON, se resalta         |
-| `error`              | texto                                        | Mensaje de error                                   |
-| `duration`           | milisegundos                                 | Duración conocida (p. ej. al mostrar el historial) |
-| `open`               | booleano                                     | Panel expandido                                    |
+</details>
 
-Métodos: `appendArgs(fragmento)`, `run()`, `complete(resultado?)`, `fail(mensaje)`, `reset()`.
-Evento: `dz-toggle` (`{ open }`). Sin `duration`, el cronómetro mide solo desde que la llamada
-está activa hasta que termina.
+### Opciones
 
-¿Necesitas el JSON parcial sin el componente? `parsePartialJson(texto)` devuelve
-`{ value, complete }` con lo que se pueda interpretar.
+| Atributo   | Para qué                                                         |
+| ---------- | ---------------------------------------------------------------- |
+| `name`     | Nombre de la herramienta                                         |
+| `status`   | `pending`, `running`, `success` o `error`                        |
+| `args`     | Entrada: un objeto o un texto JSON (puede estar incompleto)      |
+| `result`   | Salida: un objeto o un texto (solo como propiedad de JavaScript) |
+| `error`    | Mensaje de error                                                 |
+| `duration` | Cuánto tardó, en milisegundos (útil al mostrar llamadas pasadas) |
+| `open`     | Mostrar el detalle abierto                                       |
 
-### `<dz-agent-timeline>`: la caja negra del agente
+| Método              | Qué hace                         |
+| ------------------- | -------------------------------- |
+| `appendArgs(texto)` | Suma un pedazo de la entrada     |
+| `run()`             | Pasa a "trabajando"              |
+| `complete(salida?)` | Termina bien y muestra la salida |
+| `fail(mensaje)`     | Termina con error                |
+| `reset()`           | Vuelve a empezar                 |
 
-<p align="center"><img src="https://raw.githubusercontent.com/diplez/ai-web-primitives/main/docs/media/agent-ui/agent-timeline.gif" alt="dz-agent-timeline recibiendo eventos en vivo, rebobinando hasta una decisión y bifurcando desde ahí" width="640"></p>
+---
 
-Una línea de tiempo con todo lo que hizo el agente. En **modo en vivo** sigue al último evento;
-al arrastrar el control o hacer clic en un evento queda fijo en ese paso, con los posteriores
-atenuados, como al rebobinar un video. **Repetir** reproduce la ejecución paso a paso y, con
-`forkable`, cada paso ofrece **Bifurcar desde aquí** para que tu app relance el agente desde ese
-punto.
+## `<dz-agent-timeline>`: el historial del agente
+
+Una lista con cada cosa que hizo el agente, en orden y con su tiempo (`+0:15`). Permite:
+
+- **Ver en vivo**: cada evento nuevo aparece al final.
+- **Volver a un paso**: arrastrando la barra o haciendo clic en un evento. Los pasos posteriores
+  se atenúan, como al retroceder un video.
+- **Reproducir**: recorre la ejecución paso a paso.
+- **Reintentar desde aquí** (opcional): avisa a tu app desde qué paso quiere el usuario volver a
+  intentar.
+
+### Ejemplo básico
 
 ```js
-const historial = document.querySelector("dz-agent-timeline");
+const timeline = document.querySelector("dz-agent-timeline");
 
-const id = historial.addEvent({ kind: "tool", title: "search_docs", status: "running" });
-historial.updateEvent(id, { status: "done", detail: "2 resultados" });
-historial.addEvent({ kind: "decision", title: "Usar cursor opaco", detail: "Evita exponer IDs." });
+timeline.addEvent({ kind: "message", title: "Request: add pagination to /orders" });
+timeline.addEvent({ kind: "tool", title: "search_docs", detail: "2 results" });
+timeline.addEvent({ kind: "decision", title: "Use an opaque cursor" });
+```
 
-historial.addEventListener("dz-fork", (event) => {
-  const { event: paso, index } = event.detail;
-  relanzarAgenteDesde(index, paso); // tu lógica: volver a ese estado y probar otro camino
+Cada evento tiene un **título** y, si quieres:
+
+| Campo    | Para qué                                                                                               |
+| -------- | ------------------------------------------------------------------------------------------------------ |
+| `kind`   | El tipo, que define el ícono y el color: `message`, `tool`, `decision`, `file`, `error` o `checkpoint` |
+| `detail` | Texto extra que se ve al seleccionar el evento                                                         |
+| `status` | `running` (late mientras dura), `done` o `error`                                                       |
+| `at`     | Hora del evento en milisegundos (si no la pasas, se usa la actual)                                     |
+
+Para cambiar un evento que ya está en la lista (por ejemplo, cuando una herramienta termina):
+
+```js
+const id = timeline.addEvent({ kind: "tool", title: "run_tests", status: "running" });
+// …más tarde
+timeline.updateEvent(id, { status: "done", detail: "14 tests passed" });
+```
+
+### Reintentar desde un paso
+
+Agrega el atributo `forkable` y escucha el evento `dz-fork`. El componente **solo avisa** qué paso
+eligió el usuario; volver a ejecutar el agente desde ahí lo decide tu app.
+
+```html
+<dz-agent-timeline forkable></dz-agent-timeline>
+```
+
+```js
+timeline.addEventListener("dz-fork", (event) => {
+  const { index, event: step } = event.detail;
+  restartAgentFrom(index); // tu lógica
 });
 ```
 
-Cada evento es un texto o un objeto:
+### Opciones
 
-| Campo    | Valores                                                           | Descripción                                      |
-| -------- | ----------------------------------------------------------------- | ------------------------------------------------ |
-| `title`  | texto                                                             | Qué pasó                                         |
-| `kind`   | `message` · `tool` · `decision` · `file` · `error` · `checkpoint` | Tipo: define el ícono y el color                 |
-| `detail` | texto                                                             | Se muestra al seleccionar el evento              |
-| `status` | `running` · `done` · `error`                                      | Estado (los `running` laten)                     |
-| `at`     | milisegundos                                                      | Marca de tiempo; `addEvent()` usa la hora actual |
-| `id`     | texto                                                             | Identificador (`addEvent()` lo genera si falta)  |
+| Atributo          | Para qué                                                 |
+| ----------------- | -------------------------------------------------------- |
+| `events`          | Todos los eventos de una vez (un array)                  |
+| `forkable`        | Muestra "Retry from here" en el paso elegido             |
+| `replay-interval` | Milisegundos entre pasos al reproducir (700 por defecto) |
 
-| Atributo / propiedad | Valores      | Descripción                                          |
-| -------------------- | ------------ | ---------------------------------------------------- |
-| `events`             | array (JSON) | Todos los eventos de una vez, p. ej. desde tu estado |
-| `forkable`           | booleano     | Muestra "Bifurcar desde aquí" y emite `dz-fork`      |
-| `replay-interval`    | milisegundos | Tiempo entre eventos al repetir (por defecto 700)    |
+| Método                 | Qué hace                          |
+| ---------------------- | --------------------------------- |
+| `addEvent(evento)`     | Agrega un evento y devuelve su id |
+| `updateEvent(id, …)`   | Cambia un evento existente        |
+| `select(índice)`       | Va a un paso                      |
+| `goLive()`             | Vuelve a seguir el último evento  |
+| `replay()` / `pause()` | Reproduce / pausa                 |
+| `clear()`              | Vacía el historial                |
 
-Métodos: `addEvent(evento)`, `updateEvent(id, cambios)`, `select(índice)`, `goLive()`,
-`replay()`, `pause()`, `clear()`. Propiedad de solo lectura: `live`. Eventos: `dz-select`
-(`{ event, index, live }`) y `dz-fork` (`{ event, index }`).
-
-El control se maneja con teclado (flechas, Inicio, Fin) y anuncia el paso a lectores de pantalla.
-El alto máximo de la lista se ajusta con `--dz-timeline-max-height` (320px por defecto).
+Eventos que emite: `dz-select` (el usuario eligió un paso) y `dz-fork` (pidió reintentar).
 
 ---
 
-## Colores y tema
+## Cambiar colores
 
-Los componentes usan las mismas variables `--dz-*` que `@diplez/ai-web-primitives`, así que un
-solo tema sirve para los dos paquetes:
+Con variables CSS, en tu hoja de estilos:
 
 ```css
 :root {
-  --dz-accent: #0ea5e9; /* color de marca */
-  --dz-radius: 14px;
+  --dz-accent: #0ea5e9; /* tu color de marca */
+  --dz-radius: 14px; /* bordes más redondeados */
 }
 ```
 
-| Variable                                      | Para qué                                              |
-| --------------------------------------------- | ----------------------------------------------------- |
-| `--dz-accent`                                 | Color principal: estado en curso, cursor, claves JSON |
-| `--dz-text`, `--dz-muted`                     | Texto principal y secundario                          |
-| `--dz-surface`, `--dz-surface-raised`         | Fondos                                                |
-| `--dz-border`                                 | Bordes                                                |
-| `--dz-success`, `--dz-warning`, `--dz-danger` | Estados (y colores del JSON resaltado)                |
-| `--dz-radius`, `--dz-font`, `--dz-font-mono`  | Forma y tipografía                                    |
-| `--dz-code-bg`                                | Fondo de los bloques de argumentos y resultado        |
+Se adaptan solos al modo claro u oscuro de tu página. Son las mismas variables de
+[`@diplez/ai-web-primitives`](https://www.npmjs.com/package/@diplez/ai-web-primitives): un solo
+tema sirve para los dos paquetes.
 
-Los valores por defecto siguen el `color-scheme` de la página (claro u oscuro). Para cambios más
-finos están las partes CSS (`::part(header)`, `::part(event)`, `::part(fork-button)`…), listadas
-en `custom-elements.json`.
+<details>
+<summary>Todas las variables</summary>
+
+| Variable                                      | Para qué                          |
+| --------------------------------------------- | --------------------------------- |
+| `--dz-accent`                                 | Color principal                   |
+| `--dz-text`, `--dz-muted`                     | Texto principal y secundario      |
+| `--dz-surface`, `--dz-surface-raised`         | Fondos                            |
+| `--dz-border`                                 | Bordes                            |
+| `--dz-success`, `--dz-warning`, `--dz-danger` | Colores de estado                 |
+| `--dz-radius`, `--dz-font`, `--dz-font-mono`  | Forma y tipografía                |
+| `--dz-code-bg`                                | Fondo de la entrada y la salida   |
+| `--dz-timeline-max-height`                    | Alto máximo del historial (320px) |
+
+</details>
 
 ---
 
-## Idiomas
+## Idioma de los textos
 
-Inglés (`en`, por defecto) y español (`es`) incluidos:
+Los textos vienen en inglés. Para español, registra los componentes así:
 
 ```js
+import { defineAll } from "@diplez/ai-agent-ui";
 defineAll({ locale: "es" });
-defineAgentTimeline({ locale: "es", messages: { fork: "Probar otro camino" } });
 ```
 
-Para otro idioma, pasar todos los textos en `messages` (ver `ENGLISH_UI_MESSAGES`).
+También puedes cambiar textos sueltos:
+
+```js
+import { defineAgentTimeline } from "@diplez/ai-agent-ui";
+defineAgentTimeline({ messages: { fork: "Try another way" } });
+```
 
 ---
 
-## Uso con frameworks
+## Usar con React, Vue o Angular
 
-| Entorno           | Cómo usarlo                                                                                                                   |
-| ----------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| **React 19+**     | `defineAll()` una vez y usar las etiquetas. Tipos: `import type {} from "@diplez/ai-agent-ui/react"`                          |
-| **Next.js / SSR** | Llamar `defineAll()` dentro de un componente `"use client"` (se registran en el navegador)                                    |
-| **Vue 3**         | `isCustomElement: (tag) => tag.startsWith("dz-")` en el plugin de Vue. Tipos: `import type {} from "@diplez/ai-agent-ui/vue"` |
-| **Angular**       | Agregar `CUSTOM_ELEMENTS_SCHEMA` al componente                                                                                |
-| **Svelte / HTML** | Funciona directo                                                                                                              |
+| Framework         | Qué hacer                                                                                                          |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------ |
+| **React 19+**     | Importa `@diplez/ai-agent-ui/define` y usa las etiquetas. Tipos: `import type {} from "@diplez/ai-agent-ui/react"` |
+| **Next.js**       | Igual, pero dentro de un componente `"use client"`                                                                 |
+| **Vue 3**         | En el plugin de Vue: `isCustomElement: (tag) => tag.startsWith("dz-")`. Tipos: `@diplez/ai-agent-ui/vue`           |
+| **Angular**       | Agrega `CUSTOM_ELEMENTS_SCHEMA` al componente                                                                      |
+| **Svelte / HTML** | Funciona directo                                                                                                   |
 
-**React**: las propiedades (`events`, `status`, `args`…) se pasan como props y quedan tipadas.
-Los eventos se escuchan con una `ref`:
+<details>
+<summary>Ejemplo en React</summary>
 
 ```tsx
+import "@diplez/ai-agent-ui/define";
 import type {} from "@diplez/ai-agent-ui/react";
 
-function Historial({ eventos, onFork }) {
+function History({ events, onRetry }) {
   const ref = useRef<HTMLElement>(null);
   useEffect(() => {
     const el = ref.current!;
-    const handler = (e: Event) => onFork((e as CustomEvent).detail.index);
+    const handler = (e: Event) => onRetry((e as CustomEvent).detail.index);
     el.addEventListener("dz-fork", handler);
     return () => el.removeEventListener("dz-fork", handler);
-  }, [onFork]);
-  return <dz-agent-timeline ref={ref} events={eventos} forkable />;
+  }, [onRetry]);
+  return <dz-agent-timeline ref={ref} events={events} forkable />;
 }
 ```
 
----
-
-## Entradas del paquete
-
-| Import                                     | Efecto secundario | Contenido                                                       |
-| ------------------------------------------ | ----------------- | --------------------------------------------------------------- |
-| `@diplez/ai-agent-ui`                      | No                | Clases, `defineAll()`, `define*()`, `parsePartialJson()`, tipos |
-| `@diplez/ai-agent-ui/define`               | Sí                | Registra todos los componentes                                  |
-| `@diplez/ai-agent-ui/<componente>/define`  | Sí                | Registra un componente (`tool-call`, `agent-timeline`)          |
-| `@diplez/ai-agent-ui/react`, `/vue`        | No (solo tipos)   | Tipos de las etiquetas para JSX y plantillas de Vue             |
-| `@diplez/ai-agent-ui/custom-elements.json` | —                 | Manifiesto de custom elements                                   |
-
-El paquete es **solo ESM**. Los consumidores CommonJS deben usar `import()` dinámico.
+</details>
 
 ---
 
-## Compatibilidad
+## Requisitos
 
-- Navegadores modernos (2024 en adelante): Chrome/Edge 123+, Firefox 120+, Safari 17.5+ (usa
-  `light-dark()` y `color-mix()` para el tema).
-- Respeta `prefers-reduced-motion`: sin animaciones de pulso ni giro.
-- Sin dependencias de framework; la única dependencia de runtime es `lit`.
+- Navegadores de 2024 en adelante: Chrome/Edge 123+, Firefox 120+, Safari 17.5+.
+- Sin dependencias de framework (solo `lit`).
+- Respeta la preferencia "reducir movimiento" del sistema.
 
-Sigue **[SemVer](https://semver.org/lang/es/)**. Mientras esté en `0.x`, los cambios que rompen
-compatibilidad suben la versión menor. La arquitectura y cómo contribuir están en
+---
+
+## Detalles técnicos
+
+<details>
+<summary>Formas de importar</summary>
+
+| Import                                      | Qué hace                                                     |
+| ------------------------------------------- | ------------------------------------------------------------ |
+| `@diplez/ai-agent-ui/define`                | Registra todos los componentes                               |
+| `@diplez/ai-agent-ui/tool-call/define`      | Registra solo `<dz-tool-call>`                               |
+| `@diplez/ai-agent-ui/agent-timeline/define` | Registra solo `<dz-agent-timeline>`                          |
+| `@diplez/ai-agent-ui`                       | No registra nada: clases, `defineAll()`, `define*()` y tipos |
+| `@diplez/ai-agent-ui/react`, `/vue`         | Solo tipos para JSX y plantillas de Vue                      |
+
+El paquete es solo ESM. Para personalizar a fondo hay partes CSS (`::part(header)`,
+`::part(event)`, `::part(fork-button)`…), listadas en `custom-elements.json`.
+
+`parsePartialJson(texto)` interpreta JSON incompleto sin usar el componente.
+
+</details>
+
+Sigue [SemVer](https://semver.org/lang/es/). Arquitectura y cómo contribuir:
 [`CONTRIBUTING.md`](https://github.com/diplez/ai-web-primitives/blob/main/CONTRIBUTING.md).
-
----
 
 ## Licencia
 

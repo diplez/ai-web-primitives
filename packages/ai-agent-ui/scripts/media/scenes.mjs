@@ -3,7 +3,7 @@
 // terminar. act() le pide al grabador que mueva el mouse de verdad (ver scripts/record-media.mjs).
 import { defineAll } from "../../dist/index.js";
 
-defineAll({ locale: "es" });
+defineAll();
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const stage = document.querySelector("#stage");
@@ -29,18 +29,18 @@ const scenes = {
       const search = stage.querySelector("#search");
       const tests = stage.querySelector("#tests");
       await wait(500);
-      await streamArgs(search, '{"query": "paginación por cursor", "limit": 3}');
+      await streamArgs(search, '{"query": "cursor pagination", "limit": 3}');
       await wait(300);
       search.run();
       await wait(1400);
-      search.complete({ total: 2, top: "Guía de la API", score: 0.92 });
+      search.complete({ total: 2, top: "API guide", score: 0.92 });
       await wait(1600);
 
       tests.hidden = false;
       await streamArgs(tests, '{"path": "tests/pagination.test.ts"}', 4, 40);
       tests.run();
       await wait(1500);
-      tests.fail("2 de 14 tests fallaron: cursor vacío al final de la lista.");
+      tests.fail("2 of 14 tests failed: empty cursor at the end of the list.");
       tests.open = true;
       await wait(2200);
     },
@@ -60,22 +60,22 @@ const scenes = {
       const start = Date.now();
       const at = (seconds) => start + seconds * 1000;
       const events = [
-        { kind: "message", title: "Pedido: agregar paginación a /orders", at: at(0) },
+        { kind: "message", title: "Request: add pagination to /orders", at: at(0) },
         {
           kind: "tool",
-          title: "search_docs · paginación por cursor",
-          detail: "2 resultados",
+          title: "search_docs · cursor pagination",
+          detail: "2 results",
           at: at(4),
         },
-        { kind: "file", title: "Leyó src/api/orders.ts", at: at(9) },
+        { kind: "file", title: "Read src/api/orders.ts", at: at(9) },
         {
           kind: "decision",
-          title: "Usar cursor opaco en base64",
-          detail: "Evita exponer IDs internos.",
+          title: "Use an opaque base64 cursor",
+          detail: "Avoids exposing internal IDs.",
           at: at(15),
         },
-        { kind: "file", title: "Editó src/api/orders.ts (+48 −6)", at: at(31) },
-        { kind: "error", title: "run_tests · 2 de 14 fallaron", at: at(46) },
+        { kind: "file", title: "Edited src/api/orders.ts (+48 −6)", at: at(31) },
+        { kind: "error", title: "run_tests · 2 of 14 failed", at: at(46) },
       ];
       await wait(400);
       for (const event of events) {
@@ -96,8 +96,8 @@ const scenes = {
         (event) => {
           timeline.addEvent({
             kind: "checkpoint",
-            title: `Nueva rama desde el paso ${event.detail.index + 1}`,
-            detail: "Probar con cursor por fecha de creación.",
+            title: `Retry from step ${event.detail.index + 1}`,
+            detail: "Trying a cursor based on creation date.",
             at: at(52),
           });
           timeline.goLive();

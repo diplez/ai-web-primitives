@@ -234,7 +234,7 @@ describe("DzAgentTimeline", () => {
     element.select(0);
     await element.updateComplete;
     const back = [...element.shadowRoot!.querySelectorAll("button")].find(
-      (button) => button.textContent?.trim() === "Back to live",
+      (button) => button.textContent?.trim() === "Jump to latest",
     )!;
     back.click();
     await element.updateComplete;
