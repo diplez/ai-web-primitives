@@ -1,0 +1,7 @@
+{
+  "outDir": "docs/media/agent-ui",
+  "scenes": {
+    "tool-call": { "fps": 20 },
+    "agent-timeline": { "fps": 20 }
+  }
+}

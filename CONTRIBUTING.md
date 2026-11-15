@@ -154,10 +154,14 @@ Hooks de git (instalados automáticamente con `npm install` vía `simple-git-hoo
 ```
 ai-web-primitives/                        # Raíz del monorepo
 ├── packages/
-│   └── ai-web-primitives/                # @diplez/ai-web-primitives
-├── scripts/validate-commit-msg.mjs       # Hook commit-msg
+│   ├── ai-web-primitives/                # @diplez/ai-web-primitives
+│   └── ai-agent-ui/                      # @diplez/ai-agent-ui
+├── scripts/
+│   ├── validate-commit-msg.mjs           # Hook commit-msg
+│   └── record-media.mjs                  # Graba los GIFs de los README (npm run media)
 ├── docs/
 │   ├── ideas-libreria-componentes-ia.md  # Roadmap de componentes
+│   ├── ideas-vanguardistas.md            # Ideas para los próximos paquetes
 │   └── media/                            # GIFs de los README (enlazados por URL de GitHub)
 ├── .github/workflows/ci.yml              # CI: lo mismo que npm run validate
 ├── eslint.config.js / .prettierrc.json
@@ -221,7 +225,7 @@ packages/ai-web-primitives/
 │   ├── check-exports.mjs                 # attw sin heredar --dry-run
 │   ├── check-side-effects.mjs            # Verifica que cada */define registre con bundlers
 │   ├── generate-framework-types.mjs      # Tipos React/Vue desde custom-elements.json
-│   └── media/                            # Escenas y grabador de los GIFs del README
+│   └── media/                            # Escenas de los GIFs del README (scenes.json/.html/.mjs)
 ├── test-types/                           # Verifica que los tipos React/Vue compilen y detecten errores
 ├── .dependency-cruiser.cjs               # Reglas de capas
 ├── tsconfig.json / tsconfig.core.json    # General (extiende la base) / pureza de domain + application
@@ -306,18 +310,18 @@ o se ejecuta el script dentro de su carpeta.
 
 **Dentro de `packages/ai-web-primitives`:**
 
-| Script                            | Qué hace                                                                                                                             |
-| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `npm run dev`                     | Build en modo watch                                                                                                                  |
-| `npm run build`                   | Genera `dist/` (ESM + `.d.ts`), `custom-elements.json` y los tipos React/Vue                                                         |
-| `npm test` / `npm run test:watch` | Tests una vez / en modo watch                                                                                                        |
-| `npm run typecheck`               | Chequeo de tipos general + pureza del núcleo                                                                                         |
-| `npm run lint`                    | ESLint + reglas de arquitectura (`lint:arch`: solo dependency-cruiser)                                                               |
-| `npm run check:exports`           | Verifica que los exports y tipos del paquete resuelvan bien                                                                          |
-| `npm run check:side-effects`      | Bundlea cada `*/define` como una app y verifica que registre sus componentes                                                         |
-| `npm run check:framework-types`   | Compila `test-types/` contra los tipos React/Vue publicados                                                                          |
-| `npm run validate`                | Todo lo anterior (también se ejecuta solo antes de publicar)                                                                         |
-| `npm run media`                   | Graba los GIFs del README en `docs/media/` (requiere `npm run build` y Edge o Chrome; `npm run media -- orbs` graba solo una escena) |
+| Script                            | Qué hace                                                                                                                                                                      |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run dev`                     | Build en modo watch                                                                                                                                                           |
+| `npm run build`                   | Genera `dist/` (ESM + `.d.ts`), `custom-elements.json` y los tipos React/Vue                                                                                                  |
+| `npm test` / `npm run test:watch` | Tests una vez / en modo watch                                                                                                                                                 |
+| `npm run typecheck`               | Chequeo de tipos general + pureza del núcleo                                                                                                                                  |
+| `npm run lint`                    | ESLint + reglas de arquitectura (`lint:arch`: solo dependency-cruiser)                                                                                                        |
+| `npm run check:exports`           | Verifica que los exports y tipos del paquete resuelvan bien                                                                                                                   |
+| `npm run check:side-effects`      | Bundlea cada `*/define` como una app y verifica que registre sus componentes                                                                                                  |
+| `npm run check:framework-types`   | Compila `test-types/` contra los tipos React/Vue publicados                                                                                                                   |
+| `npm run validate`                | Todo lo anterior (también se ejecuta solo antes de publicar)                                                                                                                  |
+| `npm run media`                   | Graba los GIFs del README con `scripts/record-media.mjs` (requiere `npm run build` y Edge o Chrome; `-- orbs` graba una escena, `-- --frames` guarda frames PNG para revisar) |
 
 ---
 
@@ -626,7 +630,9 @@ npm run validate
    build y tests que necesite (`tsup.config.ts`, `vitest.config.ts`, `.dependency-cruiser.cjs`).
 3. Definir los scripts `build`, `test`, `typecheck`, `lint` y `validate` (los de la raíz los
    ejecutan en cada paquete) y `prepublishOnly: "npm run validate"`.
-4. Escribir su `README.md` (uso, no arquitectura) y copiar `LICENSE`.
+4. Escribir su `README.md` (uso, no arquitectura) y copiar `LICENSE`. Para los GIFs, crear
+   `scripts/media/` con `scenes.json`, `scenes.html` y `scenes.mjs` (ver los paquetes existentes)
+   y el script `"media": "node ../../scripts/record-media.mjs"`.
 5. Si usa otro paquete del monorepo, declararlo en `dependencies` (por ejemplo
    `"@diplez/ai-web-primitives": "^0.1.2"`).
 6. Ejecutar `npm install` en la raíz (enlaza el paquete) y `npm run validate`.

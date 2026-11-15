@@ -1,0 +1,111 @@
+{
+  "name": "@diplez/ai-agent-ui",
+  "version": "0.1.0",
+  "description": "Web Components para supervisar agentes de IA: llamadas a herramientas en vivo y una línea de tiempo que se rebobina y se bifurca. Funcionan en React, Vue, Angular, Svelte o HTML plano.",
+  "keywords": [
+    "web-components",
+    "custom-elements",
+    "lit",
+    "ai",
+    "agents",
+    "ai-agents",
+    "tool-calling",
+    "function-calling",
+    "timeline",
+    "llm",
+    "react",
+    "vue",
+    "angular",
+    "svelte"
+  ],
+  "author": "diplez",
+  "license": "MIT",
+  "homepage": "https://github.com/diplez/ai-web-primitives/tree/main/packages/ai-agent-ui#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/diplez/ai-web-primitives.git",
+    "directory": "packages/ai-agent-ui"
+  },
+  "bugs": {
+    "url": "https://github.com/diplez/ai-web-primitives/issues"
+  },
+  "type": "module",
+  "sideEffects": [
+    "./dist/define.js",
+    "./dist/composition/*/define.js"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./define": {
+      "types": "./dist/define.d.ts",
+      "default": "./dist/define.js"
+    },
+    "./tool-call/define": {
+      "types": "./dist/composition/tool-call/define.d.ts",
+      "default": "./dist/composition/tool-call/define.js"
+    },
+    "./agent-timeline/define": {
+      "types": "./dist/composition/agent-timeline/define.d.ts",
+      "default": "./dist/composition/agent-timeline/define.js"
+    },
+    "./react": {
+      "types": "./dist/frameworks/react.d.ts",
+      "default": "./dist/frameworks/react.js"
+    },
+    "./vue": {
+      "types": "./dist/frameworks/vue.d.ts",
+      "default": "./dist/frameworks/vue.js"
+    },
+    "./custom-elements.json": "./custom-elements.json",
+    "./package.json": "./package.json"
+  },
+  "customElements": "custom-elements.json",
+  "files": [
+    "dist",
+    "!dist/**/*.map",
+    "custom-elements.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "dev": "tsup --watch",
+    "build": "tsup && npm run analyze && node scripts/generate-framework-types.mjs",
+    "analyze": "cem analyze",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.core.json",
+    "lint": "eslint . && npm run lint:arch",
+    "lint:arch": "depcruise src",
+    "lint:fix": "eslint . --fix",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check:exports": "node scripts/check-exports.mjs",
+    "check:side-effects": "node scripts/check-side-effects.mjs",
+    "check:framework-types": "tsc -p test-types/tsconfig.json",
+    "validate": "npm run lint && npm run typecheck && npm test && npm run build && npm run check:exports && npm run check:side-effects && npm run check:framework-types",
+    "prepublishOnly": "npm run validate",
+    "media": "node ../../scripts/record-media.mjs"
+  },
+  "dependencies": {
+    "lit": "^3.3.3"
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.5",
+    "@custom-elements-manifest/analyzer": "^0.11.0",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@types/react": "^19.3.0",
+    "dependency-cruiser": "^18.7.2",
+    "esbuild": "^0.28.2",
+    "jsdom": "^29.1.1",
+    "tsup": "^9.0.0",
+    "vitest": "^5.1.0",
+    "vue": "^3.5.45"
+  }
+}
