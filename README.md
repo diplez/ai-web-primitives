@@ -11,12 +11,14 @@ Angular, Svelte o HTML plano, y se adaptan a tu marca cambiando una variable de 
 | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
 | [`@diplez/ai-web-primitives`](packages/ai-web-primitives#readme) | [![npm](https://img.shields.io/npm/v/@diplez/ai-web-primitives)](https://www.npmjs.com/package/@diplez/ai-web-primitives) | Markdown en streaming, pasos de razonamiento, aprobaciones, citas y 12 orbes de pensamiento   |
 | [`@diplez/ai-agent-ui`](packages/ai-agent-ui#readme)             | [![npm](https://img.shields.io/npm/v/@diplez/ai-agent-ui)](https://www.npmjs.com/package/@diplez/ai-agent-ui)             | Llamadas a herramientas en vivo y una línea de tiempo del agente que se rebobina y se bifurca |
+| [`@diplez/ai-steer-ui`](packages/ai-steer-ui#readme)             | [![npm](https://img.shields.io/npm/v/@diplez/ai-steer-ui)](https://www.npmjs.com/package/@diplez/ai-steer-ui)             | Perillas que reescriben la respuesta (más corta, más simple, más formal) palabra por palabra  |
 
 Cada paquete se instala por separado y tiene su propia documentación de uso:
 
 ```bash
 npm install @diplez/ai-web-primitives
 npm install @diplez/ai-agent-ui
+npm install @diplez/ai-steer-ui
 ```
 
 ## Desarrollo

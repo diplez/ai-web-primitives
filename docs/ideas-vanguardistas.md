@@ -70,3 +70,49 @@ Sigue la línea de los orbes, la parte más llamativa de `@diplez/ai-web-primiti
 | 1     | Paquete A: `<dz-tool-call>`, `<dz-agent-timeline>` | Mayor demanda real hoy                          |
 | 2     | `<dz-confidence-text>` (paquete B)                 | La idea más original; muy demostrable en un GIF |
 | 3     | `<dz-presence>` (paquete C)                        | Máximo impacto visual; reutiliza los orbes      |
+
+---
+
+# Segunda ronda: ideas originales
+
+Conceptos que, hasta donde sabemos, ninguna librería ofrece como componente. Hay prototipos
+interactivos de todos ellos (página local de validación visual).
+
+## Paquete D: `@diplez/ai-steer-ui` — dirigir la respuesta sin escribir otro prompt
+
+> Estado: **`<dz-answer-dial>` implementado** (`packages/ai-steer-ui`).
+
+1. **`<dz-intent-lens>` — "esto es lo que entendí".** Antes de actuar, la IA muestra su
+   interpretación en fichas editables (objetivo, restricciones, suposiciones). El usuario
+   corrige una ficha y la IA sigue con eso.
+2. **`<dz-answer-dial>` — perillas para la respuesta.** _Más corto ↔ más largo_, _simple ↔
+   técnico_, _casual ↔ formal_. Al girar, el texto se transforma en su lugar, palabra por
+   palabra.
+3. **`<dz-what-if>` — ¿y si cambio este dato?** Los datos de una respuesta quedan editables
+   dentro del texto; al cambiar uno, solo se actualizan las partes que dependían de él.
+
+## Paquete E: `@diplez/ai-undo-ui` — deshacer lo que hizo la IA, pieza por pieza
+
+4. **`<dz-trust-receipt>` — el recibo del agente.** Cada acción, su costo y quién la aprobó, con
+   un botón de deshacer por línea.
+5. **`<dz-selective-undo>` — deshacer una sola cosa del medio**, avisando qué otros cambios
+   dependían de ella.
+
+## Paquete F: `@diplez/ai-memory-ui` — lo que la IA sabe de ti, a la vista
+
+6. **`<dz-memory-shelf>` — el estante de recuerdos.** Cada recuerdo muestra de dónde salió, se
+   desvanece si no se usa y se puede fijar, editar u olvidar.
+7. **`<dz-context-jar>` — el frasco del contexto.** La memoria de trabajo del modelo como un
+   frasco que se llena; el usuario arrastra fuera lo que no importa.
+
+## Paquete G: `@diplez/ai-ask-ui` — preguntar señalando
+
+8. **`<dz-circle-to-ask>` — encierra y pregunta.** El usuario encierra cualquier parte de la app
+   y pregunta sobre eso; la IA recibe la región y su contenido.
+9. **`<dz-ghost-draft>` — borrador fantasma que se pinta.** La IA propone texto translúcido y el
+   usuario pasa el cursor como un pincel sobre las palabras que quiere conservar.
+
+## Paquete H: `@diplez/ai-jury-ui` — cuando una sola respuesta no alcanza
+
+10. **`<dz-consensus>` — el jurado.** Varios modelos responden lo mismo y cada frase muestra
+    cuántos estuvieron de acuerdo; las frases en disputa muestran las versiones alternativas.

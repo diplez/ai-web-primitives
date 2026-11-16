@@ -1,0 +1,6 @@
+{
+  "outDir": "docs/media/steer-ui",
+  "scenes": {
+    "answer-dial": { "fps": 20 }
+  }
+}

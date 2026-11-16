@@ -1,0 +1,13 @@
+{
+  // Chequeo de pureza del núcleo (domain + application):
+  // sin "DOM" en lib ni tipos globales, cualquier uso de window, document, HTMLElement,
+  // customElements, Lit, etc. en estas capas falla en `npm run typecheck`.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "lib": ["ES2021"],
+    "types": [],
+    "noEmit": true
+  },
+  "include": ["src/domain", "src/application"],
+  "exclude": ["src/**/*.test.ts"]
+}

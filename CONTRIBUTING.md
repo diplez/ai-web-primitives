@@ -155,7 +155,8 @@ Hooks de git (instalados automáticamente con `npm install` vía `simple-git-hoo
 ai-web-primitives/                        # Raíz del monorepo
 ├── packages/
 │   ├── ai-web-primitives/                # @diplez/ai-web-primitives
-│   └── ai-agent-ui/                      # @diplez/ai-agent-ui
+│   ├── ai-agent-ui/                      # @diplez/ai-agent-ui
+│   └── ai-steer-ui/                      # @diplez/ai-steer-ui
 ├── scripts/
 │   ├── validate-commit-msg.mjs           # Hook commit-msg
 │   └── record-media.mjs                  # Graba los GIFs de los README (npm run media)

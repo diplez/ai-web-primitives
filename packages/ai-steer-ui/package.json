@@ -1,0 +1,107 @@
+{
+  "name": "@diplez/ai-steer-ui",
+  "version": "0.1.0",
+  "description": "Web Components para dirigir respuestas de IA sin escribir otro prompt: perillas que reescriben la respuesta (más corta, más simple, más formal) con una transición palabra por palabra. Funcionan en React, Vue, Angular, Svelte o HTML plano.",
+  "keywords": [
+    "web-components",
+    "custom-elements",
+    "lit",
+    "ai",
+    "llm",
+    "rewrite",
+    "answer",
+    "dial",
+    "knob",
+    "steering",
+    "react",
+    "vue",
+    "angular",
+    "svelte"
+  ],
+  "author": "diplez",
+  "license": "MIT",
+  "homepage": "https://github.com/diplez/ai-web-primitives/tree/main/packages/ai-steer-ui#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/diplez/ai-web-primitives.git",
+    "directory": "packages/ai-steer-ui"
+  },
+  "bugs": {
+    "url": "https://github.com/diplez/ai-web-primitives/issues"
+  },
+  "type": "module",
+  "sideEffects": [
+    "./dist/define.js",
+    "./dist/composition/*/define.js"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./define": {
+      "types": "./dist/define.d.ts",
+      "default": "./dist/define.js"
+    },
+    "./answer-dial/define": {
+      "types": "./dist/composition/answer-dial/define.d.ts",
+      "default": "./dist/composition/answer-dial/define.js"
+    },
+    "./react": {
+      "types": "./dist/frameworks/react.d.ts",
+      "default": "./dist/frameworks/react.js"
+    },
+    "./vue": {
+      "types": "./dist/frameworks/vue.d.ts",
+      "default": "./dist/frameworks/vue.js"
+    },
+    "./custom-elements.json": "./custom-elements.json",
+    "./package.json": "./package.json"
+  },
+  "customElements": "custom-elements.json",
+  "files": [
+    "dist",
+    "!dist/**/*.map",
+    "custom-elements.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "dev": "tsup --watch",
+    "build": "tsup && npm run analyze && node scripts/generate-framework-types.mjs",
+    "analyze": "cem analyze",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.core.json",
+    "lint": "eslint . && npm run lint:arch",
+    "lint:arch": "depcruise src",
+    "lint:fix": "eslint . --fix",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check:exports": "node scripts/check-exports.mjs",
+    "check:side-effects": "node scripts/check-side-effects.mjs",
+    "check:framework-types": "tsc -p test-types/tsconfig.json",
+    "validate": "npm run lint && npm run typecheck && npm test && npm run build && npm run check:exports && npm run check:side-effects && npm run check:framework-types",
+    "prepublishOnly": "npm run validate",
+    "media": "node ../../scripts/record-media.mjs"
+  },
+  "dependencies": {
+    "lit": "^3.3.3"
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.5",
+    "@custom-elements-manifest/analyzer": "^0.11.0",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@types/react": "^19.3.0",
+    "dependency-cruiser": "^18.7.2",
+    "esbuild": "^0.28.2",
+    "jsdom": "^29.1.1",
+    "tsup": "^9.0.0",
+    "vitest": "^5.1.0",
+    "vue": "^3.5.45"
+  }
+}
