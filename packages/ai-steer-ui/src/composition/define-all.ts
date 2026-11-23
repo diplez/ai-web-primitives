@@ -1,4 +1,5 @@
 import { defineAnswerDial } from "./answer-dial/define-answer-dial.js";
+import { defineIntentLens } from "./intent-lens/define-intent-lens.js";
 import type { Locale } from "./shared/locale.js";
 
 export interface DefineAllOptions {
@@ -16,4 +17,5 @@ export interface DefineAllOptions {
  */
 export function defineAll(options: DefineAllOptions = {}): void {
   defineAnswerDial(options);
+  defineIntentLens(options);
 }

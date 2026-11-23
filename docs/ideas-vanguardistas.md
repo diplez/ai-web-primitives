@@ -80,7 +80,7 @@ interactivos de todos ellos (página local de validación visual).
 
 ## Paquete D: `@diplez/ai-steer-ui` — dirigir la respuesta sin escribir otro prompt
 
-> Estado: **`<dz-answer-dial>` implementado** (`packages/ai-steer-ui`).
+> Estado: **`<dz-answer-dial>` y `<dz-intent-lens>` implementados** (`packages/ai-steer-ui`).
 
 1. **`<dz-intent-lens>` — "esto es lo que entendí".** Antes de actuar, la IA muestra su
    interpretación en fichas editables (objetivo, restricciones, suposiciones). El usuario

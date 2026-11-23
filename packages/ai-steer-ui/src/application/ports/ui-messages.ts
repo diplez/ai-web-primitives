@@ -17,4 +17,30 @@ export interface UiMessages {
     /** Mensaje si la reescritura falla. */
     readonly failed: string;
   };
+  readonly intentLens: {
+    readonly heading: string;
+    readonly goal: string;
+    readonly constraints: string;
+    readonly assumptions: string;
+    readonly add: string;
+    readonly addConstraint: string;
+    readonly addAssumption: string;
+    readonly writeOwn: string;
+    readonly remove: string;
+    readonly restore: string;
+    /** "Back to “{text}”": vuelve al texto original de una ficha. */
+    readonly keepOriginal: string;
+    readonly unsure: string;
+    readonly unsureHint: string;
+    readonly editGoal: string;
+    readonly question: string;
+    /** "{count} corrections". */
+    readonly changes: string;
+    readonly oneChange: string;
+    readonly reset: string;
+    readonly confirm: string;
+    readonly confirmWithChanges: string;
+    readonly confirmed: string;
+    readonly reopen: string;
+  };
 }

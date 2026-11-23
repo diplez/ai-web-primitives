@@ -17,6 +17,24 @@ export type {
 export { DIAL_PRESETS } from "./domain/dial/dial.js";
 export type { DialInput, DialPreset, DialValues } from "./domain/dial/dial.js";
 
+// <dz-intent-lens>
+export { INTENT_LENS_TAG, defineIntentLens } from "./composition/intent-lens/define-intent-lens.js";
+export type { DefineIntentLensOptions } from "./composition/intent-lens/define-intent-lens.js";
+export { DzIntentLens } from "./presentation/components/intent-lens/dz-intent-lens.js";
+export type { IntentLensStatus } from "./presentation/components/intent-lens/dz-intent-lens.js";
+export type { IntentReviewResult } from "./application/use-cases/intent-lens/review-intent.js";
+export type {
+  IntentChange,
+  IntentEdit,
+  IntentInput,
+  IntentItemKind,
+} from "./domain/intent/intent.js";
+export {
+  INTENT_REQUEST_PROMPT,
+  buildIntentInstruction,
+  parseIntentResponse,
+} from "./domain/intent/intent-prompts.js";
+
 // Sin componente: instrucción para el modelo y diff palabra por palabra
 export { buildRewriteInstruction } from "./domain/dial/rewrite-instruction.js";
 export { diffWords } from "./domain/text/word-diff.js";

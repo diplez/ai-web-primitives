@@ -1,12 +1,18 @@
 # @diplez/ai-steer-ui
 
-**Deja que tus usuarios ajusten una respuesta de IA girando una perilla**, sin escribir otro
-prompt. ¿Muy larga? Gira hacia _Shorter_. ¿Muy técnica? Gira hacia _Simpler_. La respuesta se
-reescribe y cambia **en su lugar, palabra por palabra**, así se ve exactamente qué cambió.
+**Deja que tus usuarios dirijan a la IA sin escribir otro prompt.** Dos componentes listos para
+usar:
 
-Funciona en **React, Vue, Angular, Svelte o HTML plano** (es un Web Component).
+- **`<dz-intent-lens>`**: antes de actuar, el agente muestra **lo que entendió** (objetivo,
+  restricciones y suposiciones) en fichas. El usuario corrige lo que esté mal con un clic y el
+  agente sigue con eso.
+- **`<dz-answer-dial>`**: después de responder, el usuario **ajusta la respuesta girando una
+  perilla** (más corta, más simple, más formal) y el texto cambia en su lugar, palabra por
+  palabra.
 
-<p align="center"><img src="https://raw.githubusercontent.com/diplez/ai-web-primitives/main/docs/media/steer-ui/answer-dial.gif" alt="dz-answer-dial: al girar las perillas la respuesta se vuelve más corta, más simple o más técnica" width="680"></p>
+Funcionan en **React, Vue, Angular, Svelte o HTML plano** (son Web Components).
+
+<p align="center"><img src="https://raw.githubusercontent.com/diplez/ai-web-primitives/main/docs/media/steer-ui/intent-lens.gif" alt="dz-intent-lens: el usuario cambia una suposición dudosa, elige otra tecnología, agrega una restricción y confirma" width="680"></p>
 
 > Versión temprana (`0.x`): la API puede cambiar antes de la `1.0.0`.
 
@@ -15,9 +21,8 @@ Funciona en **React, Vue, Angular, Svelte o HTML plano** (es un Web Component).
 ## Contenido
 
 - [Instalar y usar](#instalar-y-usar)
-- [Conectarlo a tu modelo](#conectarlo-a-tu-modelo)
-- [Elegir las perillas](#elegir-las-perillas)
-- [Opciones](#opciones)
+- [`<dz-intent-lens>`: lo que entendió el agente](#dz-intent-lens-lo-que-entendió-el-agente)
+- [`<dz-answer-dial>`: perillas para la respuesta](#dz-answer-dial-perillas-para-la-respuesta)
 - [Cambiar colores](#cambiar-colores)
 - [Idioma de los textos](#idioma-de-los-textos)
 - [Usar con React, Vue o Angular](#usar-con-react-vue-o-angular)
@@ -34,13 +39,104 @@ Funciona en **React, Vue, Angular, Svelte o HTML plano** (es un Web Component).
 npm install @diplez/ai-steer-ui
 ```
 
-**2. Registrar el componente** (una sola vez, al iniciar tu app)
+**2. Registrar los componentes** (una sola vez, al iniciar tu app)
 
 ```js
 import "@diplez/ai-steer-ui/define";
 ```
 
-**3. Ponerlo con la respuesta y decirle cómo reescribirla**
+**3. Usarlos**: cada componente tiene su ejemplo abajo.
+
+---
+
+## `<dz-intent-lens>`: lo que entendió el agente
+
+Antes de que el agente trabaje varios minutos, la lente muestra cómo interpretó el pedido:
+
+| Ficha             | Qué puede hacer el usuario                           |
+| ----------------- | ---------------------------------------------------- |
+| **Objetivo**      | Editarlo                                             |
+| **Restricciones** | Quitarlas (✕) o agregar las suyas (+ Add)            |
+| **Suposiciones**  | Elegir otra alternativa, escribir la suya o quitarla |
+
+Las suposiciones en las que el modelo **no estaba seguro** se marcan con _Not sure_ para que el
+usuario las mire primero. Al confirmar, tu app recibe las correcciones y una instrucción lista
+para devolverle al modelo.
+
+### Ejemplo básico
+
+```html
+<dz-intent-lens id="lens"></dz-intent-lens>
+```
+
+```js
+import { INTENT_REQUEST_PROMPT, parseIntentResponse } from "@diplez/ai-steer-ui";
+
+const lens = document.querySelector("#lens");
+
+// 1. Pídele al modelo su interpretación (INTENT_REQUEST_PROMPT le explica el formato).
+const reply = await askMyModel(userRequest, INTENT_REQUEST_PROMPT);
+lens.intent = parseIntentResponse(reply);
+
+// 2. Cuando el usuario confirma, devuélvele al modelo las correcciones y sigue con la tarea.
+lens.addEventListener("dz-intent-confirm", async (event) => {
+  const { instruction } = event.detail;
+  // "The user reviewed your interpretation… - Use "Vue" instead of "React". …"
+  await continueAgent(instruction);
+});
+```
+
+También puedes armar la interpretación tú mismo:
+
+```js
+lens.intent = {
+  goal: "Build a sign-up form",
+  constraints: ["Email + password", "Accessible"],
+  assumptions: [
+    { text: "React", options: ["Vue", "Plain HTML"], confidence: 0.85 },
+    { text: "Firebase Auth", options: ["Supabase"], confidence: 0.35 }, // se marca como dudosa
+  ],
+};
+```
+
+| Campo de una suposición | Para qué                                                          |
+| ----------------------- | ----------------------------------------------------------------- |
+| `text`                  | La suposición                                                     |
+| `options`               | Alternativas que el usuario puede elegir                          |
+| `confidence`            | Qué tan seguro estaba el modelo, de 0 a 1 (menos de 0.6 = dudosa) |
+
+### Opciones
+
+| Atributo / propiedad | Para qué                                                                     |
+| -------------------- | ---------------------------------------------------------------------------- |
+| `intent`             | La interpretación del modelo. Si cambia, se empieza de nuevo                 |
+| `heading`            | Título (por defecto, "Here's what I understood")                             |
+| `status`             | `review` mientras se revisa, `confirmed` después (reflejado, para estilizar) |
+| `result`             | Solo lectura: interpretación final, correcciones e instrucción               |
+
+| Método         | Qué hace                                              |
+| -------------- | ----------------------------------------------------- |
+| `confirm()`    | Confirma (igual que el botón) y devuelve el resultado |
+| `reset()`      | Deshace las correcciones del usuario                  |
+| `reopen()`     | Vuelve a permitir correcciones después de confirmar   |
+| `edit(cambio)` | Aplica una corrección desde código                    |
+
+Eventos: `dz-intent-change` (el usuario corrigió algo) y `dz-intent-confirm` (confirmó). Los
+dos traen `{ intent, changes, instruction }`.
+
+Todo se maneja también con el teclado: las fichas son botones, Enter confirma lo que escribes y
+Escape cancela o cierra el menú.
+
+---
+
+## `<dz-answer-dial>`: perillas para la respuesta
+
+<p align="center"><img src="https://raw.githubusercontent.com/diplez/ai-web-primitives/main/docs/media/steer-ui/answer-dial.gif" alt="dz-answer-dial: al girar las perillas la respuesta se vuelve más corta, más simple o más técnica" width="680"></p>
+
+¿Muy larga? Gira hacia _Shorter_. ¿Muy técnica? Gira hacia _Simpler_. La respuesta se reescribe
+y cambia **en su lugar, palabra por palabra**, así se ve exactamente qué cambió.
+
+### Ejemplo básico
 
 ```html
 <dz-answer-dial id="answer"></dz-answer-dial>
@@ -67,9 +163,7 @@ Eso es todo. El componente se encarga del resto:
   `signal`) y solo muestra la última.
 - **La posición central es la respuesta original**, y el botón _Original_ vuelve a ella.
 
----
-
-## Conectarlo a tu modelo
+### Conectarlo a tu modelo
 
 La función `rewrite` recibe:
 
@@ -123,9 +217,7 @@ answer.addEventListener("dz-dial-change", async (event) => {
 
 </details>
 
----
-
-## Elegir las perillas
+### Elegir las perillas
 
 Por defecto aparecen dos: **Shorter ↔ Longer** y **Simpler ↔ More technical**. Hay una tercera
 incluida, **Casual ↔ Formal**:
@@ -151,9 +243,7 @@ answer.dials = [
 | `startHint`, `endHint` | Cómo pedírselo al modelo (por defecto, las etiquetas en minúsculas) |
 | `steps`                | Cantidad de posiciones: 3, 5 (por defecto), 7 o 9                   |
 
----
-
-## Opciones
+### Opciones
 
 | Atributo / propiedad | Para qué                                                                  |
 | -------------------- | ------------------------------------------------------------------------- |
@@ -183,7 +273,8 @@ de pantalla anuncian la posición: "Shorter, 1 of 2".
 
 ```css
 :root {
-  --dz-accent: #0ea5e9; /* color de las perillas y de las palabras que cambian */
+  --dz-accent: #0ea5e9; /* perillas, palabras que cambian, objetivo y correcciones */
+  --dz-warning: #f59e0b; /* suposiciones dudosas */
 }
 ```
 
@@ -256,6 +347,7 @@ function Answer({ text }: { text: string }) {
 | ---------------------------------------- | ------------------------------------------------------------ |
 | `@diplez/ai-steer-ui/define`             | Registra todos los componentes                               |
 | `@diplez/ai-steer-ui/answer-dial/define` | Registra solo `<dz-answer-dial>`                             |
+| `@diplez/ai-steer-ui/intent-lens/define` | Registra solo `<dz-intent-lens>`                             |
 | `@diplez/ai-steer-ui`                    | No registra nada: clases, `defineAll()`, `define*()` y tipos |
 | `@diplez/ai-steer-ui/react`, `/vue`      | Solo tipos para JSX y plantillas de Vue                      |
 
@@ -263,9 +355,11 @@ Sin usar el componente:
 
 - `buildRewriteInstruction(dials, values)`: arma la instrucción para el modelo.
 - `diffWords(antes, después)`: compara dos textos palabra por palabra.
+- `INTENT_REQUEST_PROMPT`, `parseIntentResponse(texto)` y `buildIntentInstruction(intent)`: piden
+  y procesan la interpretación del modelo.
 
 El paquete es solo ESM. Para personalizar a fondo hay partes CSS (`::part(knob)`,
-`::part(answer)`, `::part(reset-button)`…), listadas en `custom-elements.json`.
+`::part(answer)`, `::part(chip)`, `::part(confirm-button)`…), listadas en `custom-elements.json`.
 
 </details>
 

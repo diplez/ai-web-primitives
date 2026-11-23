@@ -1,7 +1,7 @@
 {
   "name": "@diplez/ai-steer-ui",
-  "version": "0.1.0",
-  "description": "Web Components para dirigir respuestas de IA sin escribir otro prompt: perillas que reescriben la respuesta (más corta, más simple, más formal) con una transición palabra por palabra. Funcionan en React, Vue, Angular, Svelte o HTML plano.",
+  "version": "0.2.0",
+  "description": "Web Components para dirigir respuestas de IA sin escribir otro prompt: perillas que reescriben la respuesta palabra por palabra y una lente para corregir lo que entendió el agente antes de actuar. Funcionan en React, Vue, Angular, Svelte o HTML plano.",
   "keywords": [
     "web-components",
     "custom-elements",
@@ -16,7 +16,11 @@
     "react",
     "vue",
     "angular",
-    "svelte"
+    "svelte",
+    "intent",
+    "assumptions",
+    "plan",
+    "human-in-the-loop"
   ],
   "author": "diplez",
   "license": "MIT",
@@ -46,6 +50,10 @@
     "./answer-dial/define": {
       "types": "./dist/composition/answer-dial/define.d.ts",
       "default": "./dist/composition/answer-dial/define.js"
+    },
+    "./intent-lens/define": {
+      "types": "./dist/composition/intent-lens/define.d.ts",
+      "default": "./dist/composition/intent-lens/define.js"
     },
     "./react": {
       "types": "./dist/frameworks/react.d.ts",
